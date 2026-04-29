@@ -1,0 +1,44 @@
+# Compiled output
+/apps/server/dist
+/apps/server/node_modules
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+/logs
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.cproject
+.settings
+/.vscode
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Version environment
+.env
+.env.development
+.env.staging
+.env.production
+.env.local
+.env.*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# NestJS specific
+.prebuild-state
