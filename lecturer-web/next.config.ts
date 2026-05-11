@@ -1,7 +1,25 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["192.168.1.2", "localhost:3000"],
+    },
+  },
+  async redirects() {
+    return [
+      {
+        source: "/notifications",
+        destination: "/messages",
+        permanent: true,
+      },
+      {
+        source: "/leaves",
+        destination: "/leave-requests",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
