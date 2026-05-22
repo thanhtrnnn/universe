@@ -1,210 +1,196 @@
 # Frontend Implementation Checklist
 
-Checklist toàn diện cho `fe/web` (Next.js) và `fe/app` (React Native), đối chiếu chi tiết với báo cáo TTCS — Chương 2 (yêu cầu chức năng) và Chương 4.4 (thiết kế giao diện).
+Checklist toàn diện cho hai nhánh frontend: `fe/web` (Next.js Admin/Lecturer Portal) và `fe/app` (React Native Mobile App), đối chiếu với báo cáo TTCS và các tính năng đã có sẵn ở backend.
+
+> **Trạng thái trên `fe/web`:** Hai portal `admin-web/` và ` lecturer-web/` đã có UI hoàn chỉnh với mock data. Chưa có API integration, auth, state management, real-time.
 
 ---
 
 ## 1. Core Setup (Cả hai nhánh)
 
 ### 1.1. TypeScript & Types
-- [ ] `tsconfig.json` strict mode.
-- [ ] Đồng bộ từ Backend: `User`, `Role`, `Course`, `Class`, `Room`, `Schedule`, `Attendance`, `Grade`, `Enrollment`, `Message`, `Notification`, `ActivityLog`, `AbsenceRequest`.
+- [ ] Khởi tạo `tsconfig.json` với strict mode.
+- [ ] Đồng bộ Interface/Type từ Backend: `User`, `Role`, `Course`, `Class`, `Schedule`, `Attendance`, `Grade`, `Enrollment`, `Message`, `Notification`, `ActivityLog`.
+- [ ] Tạo shared types package hoặc symlink để tránh trùng lặp giữa web và mobile.
 
 ### 1.2. API Client (Axios)
-- [ ] `baseURL` từ `.env`.
-- [ ] Interceptor: auto-attach JWT Access Token vào header `Authorization`.
-- [ ] Auto-refresh: gọi Refresh Token API khi gặp lỗi 401.
-- [ ] Logout tự động khi Refresh Token cũng hết hạn.
+- [ ] Thiết lập `baseURL` từ biến môi trường (`.env`).
+- [ ] Axios Interceptor tự động chèn JWT Access Token vào header `Authorization`.
+- [ ] Xử lý logic tự động gọi Refresh Token API khi gặp lỗi 401 (Access Token hết hạn).
+- [ ] Xử lý logout tự động khi Refresh Token cũng hết hạn.
 
-### 1.3. Global State
-- [ ] Zustand / Redux Toolkit.
-- [ ] Stores: `authStore`, `userStore`, `scheduleStore`, `notificationStore`, `attendanceStore`.
+### 1.3. Global State Management
+- [ ] Cấu hình Zustand hoặc Redux Toolkit.
+- [ ] Tạo store cho: `authStore`, `userStore`, `scheduleStore`, `notificationStore`.
 
-### 1.4. Real-time (Socket.IO)
-- [ ] Connection quản lý (connected/disconnected/reconnecting).
-- [ ] Lắng nghe `NotificationsGateway` (thông báo mới, tin nhắn mới).
-- [ ] Lắng nghe `AttendanceGateway` (cập nhật điểm danh real-time cho giảng viên).
+### 1.4. Real-time Client (Socket.IO)
+- [ ] Khởi tạo `socket.io-client` connection.
+- [ ] Quản lý connection state (connected/disconnected/reconnecting).
+- [ ] Lắng nghe events từ `NotificationsGateway` (thông báo mới, tin nhắn mới).
+- [ ] Lắng nghe events từ `AttendanceGateway` (cập nhật trạng thái điểm danh real-time).
 
-### 1.5. Bảo mật & Phân quyền
-- [ ] Access Token: memory/localStorage. Refresh Token: HttpOnly cookie (web) / SecureStorage (mobile).
-- [ ] RBAC frontend: ẩn/hiện UI theo role `student` / `lecturer` / `admin`.
-- [ ] Route guards: redirect nếu không đúng role.
-
-### 1.6. Đa ngôn ngữ & Theme
-- [ ] Hỗ trợ tiếng Việt (mặc định) và tiếng Anh.
-- [ ] Dark mode / Light mode toggle.
+### 1.5. Bảo mật
+- [ ] Lưu Access Token ở memory/localStorage, Refresh Token ở HttpOnly cookie (web) hoặc SecureStorage (mobile).
+- [ ] Implement RBAC ở frontend: ẩn/hiện UI theo vai trò (Student/Lecturer/Admin).
 
 ---
 
 ## 2. Nhánh `fe/web` — Next.js Web Portal
 
-### 2.1. Cấu hình
-- [ ] App Router (`src/app/`) với route groups: `(auth)`, `(admin)`, `(lecturer)`.
-- [ ] UI library: Shadcn UI / Ant Design + TailwindCSS.
-- [ ] Layout phân quyền: `AdminLayout`, `LecturerLayout`.
+### 2.1. Cấu hình ban đầu
+- [x] Thiết lập App Router (`src/app/`) với route groups: `(dashboard)` — cả admin-web và lecturer-web.
+- [x] Cài đặt thư viện UI: TailwindCSS v4 + Material Design 3 custom CSS tokens (globals.css ~300 dòng, light + dark).
+- [x] Cấu hình theme: Light mode / Dark mode — ThemeProvider với localStorage, FOUC prevention, toggle ở header + settings.
+- [x] Thiết lập layout phân quyền: `AdminLayout` (sidebar 6 items), `LecturerLayout` (sidebar 8 items).
 
-### 2.2. Auth Pages
-- [ ] **Đăng nhập:** Form → gọi API → nhận Access + Refresh Token → redirect theo role.
-- [ ] **Quên mật khẩu:** Flow reset password.
-- [ ] JWT flow: Client gửi login → Server trả token → Client đính kèm vào mọi request sau đó.
+### 2.2. Authentication Pages
+- [x] **Đăng nhập:** Form login UI tồn tại (`admin-web/login/page.tsx`) — **chưa có API call, chưa có JWT**.
+- [ ] **Đăng ký:** Form đăng ký (nếu có).
+- [ ] **Quên mật khẩu:** Flow reset password qua email.
 
-### 2.3. Phân hệ Admin — Quản lý người dùng
-- [ ] Danh sách người dùng: bảng phân trang, tìm kiếm, lọc theo vai trò.
-- [ ] CRUD: tạo mới, chỉnh sửa, vô hiệu hóa tài khoản Sinh viên / Giảng viên.
-- [ ] **Bulk import:** Upload file danh sách hàng loạt.
-- [ ] **RBAC:** Gán vai trò (Student/Lecturer/Admin) → hệ thống tự động áp dụng quyền.
-- [ ] **Audit log:** Mọi thay đổi được ghi lại trong nhật ký hệ thống.
+### 2.3. Admin — Quản lý người dùng
+- [x] Danh sách người dùng (bảng phân trang, tìm kiếm, lọc theo vai trò) — UI hoàn chỉnh, 3 mock users.
+- [x] Thêm/sửa/xóa tài khoản Sinh viên, Giảng viên — Form create user UI tồn tại (avatar upload, role select), **chưa có API**.
+- [ ] Phân quyền theo RBAC: gán vai trò cho từng tài khoản.
+- [ ] Upload danh sách hàng loạt từ file (bulk import).
 
-### 2.4. Phân hệ Admin — Quản lý đào tạo
+### 2.4. Admin — Quản lý đào tạo
 - [ ] **Khoa / Ngành:** CRUD danh mục.
-- [ ] **Môn học (Courses):** CRUD, gắn với Ngành.
-- [ ] **Lớp học phần (Classes):** Mở lớp cho từng học kỳ, gán giảng viên phụ trách.
-- [ ] **Phòng học (Rooms):** CRUD + **tọa độ GPS** (latitude, longitude) — bắt buộc cho Geo-fencing.
+- [ ] **Môn học (Courses):** CRUD môn học, gắn với Ngành.
+- [x] **Lớp hành chính / Lớp học phần (Classes):** Danh sách lớp UI hoàn chỉnh (4 mock classes, search, filter theo học kỳ/khoa). Chi tiết lớp với bảng điểm danh SV.
+- [ ] **Phòng học (Rooms):** Quản lý phòng học + tọa độ GPS (phục vụ Geo-fencing).
 
-### 2.5. Phân hệ Admin — Thời khóa biểu
-- [ ] Xếp lịch: chọn lớp + phòng + giảng viên + khung giờ.
-- [ ] **Kiểm tra tự động xung đột** lịch phòng và lịch giảng viên.
-- [ ] Hiển thị theo tuần/tháng.
+### 2.5. Admin — Thời khóa biểu (Schedules)
+- [ ] Xếp lịch học: chọn lớp, phòng, giảng viên, khung giờ.
+- [ ] Kiểm tra tự động xung đột lịch phòng và lịch giảng viên.
+- [ ] Hiển thị thời khóa biểu theo tuần/tháng.
 
-### 2.6. Phân hệ Admin — Dashboard & Thống kê
-- [ ] Biểu đồ tỷ lệ chuyên cần: theo lớp, theo khoa, toàn trường.
-- [ ] Bộ lọc: học kỳ, khoảng thời gian, khoa.
-- [ ] **Xuất báo cáo:** Excel / PDF.
+### 2.6. Admin — Dashboard & Thống kê
+- [x] Dashboard tổng quan: 4 KPI cards, bar chart, hệ thống alerts, bảng lớp gần đây — UI hoàn chỉnh, mock data.
+- [x] Statistics page: KPI cards, bar chart, SVG donut chart, trend placeholder — UI hoàn chỉnh, mock data.
+- [ ] Bộ lọc theo học kỳ, khoảng thời gian, khoa.
+- [ ] Xuất báo cáo dạng Excel / PDF.
 
-### 2.7. Phân hệ Admin — Thông báo toàn hệ thống
-- [ ] Soạn nội dung, chọn đối tượng nhận (toàn bộ SV, toàn bộ GV, hoặc một khoa).
-- [ ] Gửi → hệ thống phân phối theo danh sách đối tượng.
+### 2.7. Giảng viên — Quản lý điểm danh
+- [ ] Mở phiên điểm danh cho lớp học đang diễn ra.
+- [ ] Hiển thị mã QR động (render từ token HMAC-SHA256, tự động refresh mỗi 5s qua WebSocket).
+- [x] Theo dõi danh sách sinh viên điểm danh real-time (cập nhật tức thì khi SV quét thành công) — UI class detail với per-session attendance checkboxes, attendance page với student list.
+- [ ] Đóng phiên điểm danh.
+- [x] Chỉnh sửa trạng thái điểm danh thủ công (điều chỉnh cho từng sinh viên, ghi lý do) — UI checkboxes tồn tại, **chưa lưu vào DB**.
 
-### 2.8. Phân hệ Giảng viên — Điểm danh
-- [ ] Chọn lớp học đang diễn ra → nhấn **Mở điểm danh**.
-- [ ] Hiển thị **QR Code động** (token HMAC-SHA256, tự động refresh mỗi 5s qua WebSocket).
-- [ ] **Theo dõi real-time:** danh sách SV cập nhật tức thì khi từng SV quét thành công.
-- [ ] Thấy rõ: ai đã có mặt, ai trễ, ai chưa điểm danh.
-- [ ] **Đóng phiên** điểm danh.
-- [ ] **Chỉnh sửa thủ công:** điều chỉnh trạng thái từng SV + ghi lý do.
+### 2.8. Giảng viên — Quản lý điểm số
+- [x] Chọn lớp học phần, loại điểm (quá trình / giữa kỳ / cuối kỳ).
+- [x] Nhập điểm cho từng sinh viên (bảng editable) — **UI hoàn chỉnh với editable inputs**.
+- [x] Tự động tính điểm tổng kết theo công thức cấu hình — **calcTotal() tính QT 20% + GK 30% + CK 50%**.
+- [ ] Công bố điểm → sinh viên thấy trên app.
 
-### 2.9. Phân hệ Giảng viên — Điểm số
-- [ ] Chọn lớp học phần + loại điểm (quá trình / giữa kỳ / cuối kỳ).
-- [ ] Bảng nhập điểm cho từng sinh viên (editable).
-- [ ] **Tự động tính điểm tổng kết** theo công thức cấu hình.
-- [ ] **Công bố điểm** → sinh viên thấy trên app. Trạng thái "Chưa có" khi chưa công bố.
+### 2.9. Giảng viên — Lịch dạy & Danh sách lớp
+- [x] Xem lịch dạy theo tuần/tháng — Dashboard có "Today's schedule" với 2 lớp.
+- [x] Xem danh sách sinh viên từng lớp, thông tin phòng học — Class detail page với student attendance grid.
 
-### 2.10. Phân hệ Giảng viên — Lịch dạy & Danh sách lớp
-- [ ] Lịch dạy theo tuần/tháng.
-- [ ] Chọn lớp → xem danh sách SV, thông tin phòng học, ghi chú.
+### 2.10. Giảng viên — Phê duyệt đơn vắng phép
+- [x] Nhận thông báo khi có sinh viên gửi đơn xin nghỉ.
+- [x] Xem nội dung đơn, chọn Chấp nhận / Từ chối — **UI hoàn chỉnh với pending/history tabs, 3 mock requests, accept/reject buttons**.
+- [ ] Hệ thống cập nhật trạng thái điểm danh thành "Vắng có phép".
 
-### 2.11. Phân hệ Giảng viên — Phê duyệt vắng phép
-- [ ] Nhận thông báo khi SV gửi đơn xin nghỉ phép + lý do.
-- [ ] Xem nội dung đơn → **Chấp nhận** / **Từ chối**.
-- [ ] Kết quả: trạng thái điểm danh buổi đó cập nhật thành "Vắng có phép" (nếu chấp nhận).
+### 2.11. Giảng viên & Admin — Thông báo
+- [x] Soạn và gửi thông báo đến lớp / khoa / toàn hệ thống — **Admin: compose form với title, content, recipient checkboxes, file upload, live preview**. **Lecturer: compose với class selector chips, rich text toolbar, phone preview mockup, sent history**.
+- [ ] Dropdown hiển thị notification real-time.
+- [ ] Đánh dấu đã đọc/chưa đọc.
 
-### 2.12. Phân hệ Giảng viên — Thông báo & Chat
-- [ ] Soạn thông báo → chọn lớp → gửi ngay (Kafka + Socket.IO/FCM).
-- [ ] Chat 1-1 với sinh viên: real-time khi online, lưu trữ khi offline.
+### 2.12. Chat
+- [ ] Danh sách hội thoại (giảng viên ↔ sinh viên).
+- [ ] Gửi/nhận tin nhắn real-time qua Socket.IO.
+- [ ] Hiển thị trạng thái online/offline.
 
 ---
 
 ## 3. Nhánh `fe/app` — React Native Mobile App
 
-### 3.1. Cấu hình
-- [ ] React Navigation: `Stack` (Auth) + `Bottom Tab` (Dashboard, Lịch học, Điểm danh, Chat, Cá nhân).
-- [ ] UI: React Native Paper / NativeWind. **Material Design** style.
-- [ ] Dark mode support.
+### 3.1. Cấu hình ban đầu
+- [ ] Thiết lập React Navigation:
+  - [ ] `Stack Navigator` cho Auth (Login, Register).
+  - [ ] `Bottom Tab Navigator` cho: Dashboard, Lịch học, Điểm danh, Chat, Cá nhân.
+- [ ] Cài đặt thư viện UI: React Native Paper hoặc NativeWind.
+- [ ] Cấu hình Material Design style.
 
-### 3.2. Hardware Permissions
-- [ ] **Camera:** iOS `Info.plist`, Android `AndroidManifest.xml`.
-- [ ] **GPS/Location:** Foreground + Background.
-- [ ] Xử lý khi bị từ chối quyền → hướng dẫn người dùng bật lại.
+### 3.2. Hardware Permissions (Quan trọng)
+- [ ] **Camera:** Cấu hình quyền truy cập Camera (iOS `Info.plist`, Android `AndroidManifest.xml`).
+- [ ] **GPS/Location:** Cấu hình quyền Vị trí — Foreground và Background Location.
+- [ ] Xử lý trường hợp người dùng từ chối cấp quyền → hiển thị hướng dẫn.
 
-### 3.3. Auth
-- [ ] Login form → gọi API → lưu JWT → auto-login khi token còn hạn.
+### 3.3. Auth Screens
+- [ ] Màn hình Đăng nhập: form + gọi API + lưu JWT.
+- [ ] Màn hình Đăng ký (nếu cần).
+- [ ] Auto-login khi token còn hiệu lực.
 
-### 3.4. Phân hệ Sinh viên — Dashboard & Lịch học
-- [ ] Dashboard: buổi học sắp diễn ra trong ngày.
-- [ ] Lịch học: tuần/tháng. Chi tiết: tên môn, phòng, giảng viên, giờ.
-- [ ] **Lịch thi** (nếu có data).
+### 3.4. Dashboard / Lịch học (Student)
+- [ ] Hiển thị buổi học sắp diễn ra trong ngày.
+- [ ] Xem lịch học theo tuần/tháng.
+- [ ] Chi tiết buổi học: tên môn, phòng, giảng viên, giờ bắt đầu/kết thúc.
 
-### 3.5. Phân hệ Sinh viên — Điểm danh thông minh
-Theo đúng 5 bước từ báo cáo (Chức năng 1, mục 2.2.1):
-- [ ] **Bước 1:** Màn hình chính → chọn "Điểm danh".
-- [ ] **Bước 2:** Yêu cầu quyền Camera + Location nếu chưa cấp.
-- [ ] **Bước 3:** Quét QR (dùng `react-native-qrcode-scanner`). Hướng camera vào QR trên màn hình GV/máy chiếu.
-- [ ] **Bước 4:** Gửi token QR + tọa độ GPS lên server cùng lúc.
-- [ ] **Bước 5:** Hiển thị kết quả:
-  - Thành công: "Điểm danh thành công" + thời gian ghi nhận.
-  - Thất bại: lý do rõ ràng ("Mã QR hết hạn" / "Ngoài phạm vi phòng học").
-- [ ] **Lịch sử điểm danh** theo từng môn học.
+### 3.5. Điểm danh thông minh (Smart Attendance)
 
-### 3.6. Phân hệ Sinh viên — Điểm số
-Theo 4 bước từ báo cáo (Chức năng 3, mục 2.2.1):
-- [ ] Danh sách môn đã đăng ký theo học kỳ (hiện tại + trước).
-- [ ] Chi tiết: điểm quá trình, giữa kỳ, cuối kỳ, tổng kết.
-- [ ] "Chưa có" khi GV chưa công bố.
+#### Sinh viên (Student)
+- [ ] Màn hình quét QR sử dụng `react-native-qrcode-scanner`.
+- [ ] Lấy tọa độ GPS bằng `react-native-geolocation-service`.
+- [ ] Gửi token QR + tọa độ GPS lên backend cùng lúc.
+- [ ] Hiển thị kết quả: thành công / thất bại (mã hết hạn / ngoài phạm vi).
+- [ ] Xem lịch sử điểm danh theo từng môn học.
 
-### 3.7. Phân hệ Sinh viên — Tiến độ tín chỉ
-Theo 3 bước từ báo cáo (Chức năng 4, mục 2.2.1):
+#### Giảng viên (Lecturer — Mobile)
+- [ ] Tạo QR Code động (hiển thị trên màn hình điện thoại).
+- [ ] QR tự động refresh mỗi 5 giây (payload HMAC-SHA256).
+- [ ] Theo dõi danh sách điểm danh real-time trên mobile.
+
+### 3.6. Điểm số (Student)
+- [ ] Danh sách môn học đã đăng ký theo học kỳ.
+- [ ] Chi tiết điểm: quá trình, giữa kỳ, cuối kỳ, tổng kết.
+- [ ] Hiển thị "Chưa có" khi giảng viên chưa công bố.
+
+### 3.7. Tiến độ tín chỉ (Student)
 - [ ] Tổng tín chỉ đã tích lũy vs. yêu cầu tốt nghiệp.
 - [ ] Danh sách môn chưa đăng ký / chưa đạt.
-- [ ] Ghi chú **môn tiên quyết**.
+- [ ] Ghi chú môn tiên quyết.
 
-### 3.8. Phân hệ Sinh viên — Chat
-Theo 3 bước (Chức năng 5, mục 2.2.1):
-- [ ] Danh sách tin nhắn → chọn **giảng viên có lớp chung** (không hiển thị GV không liên quan).
-- [ ] Gửi/nhận real-time khi online. Nhận phản hồi sau khi offline.
+### 3.8. Chat
+- [ ] Danh sách hội thoại (giảng viên có lớp chung).
+- [ ] Gửi/nhận tin nhắn real-time.
+- [ ] Hiển thị trạng thái online/offline.
 
-### 3.9. Phân hệ Sinh viên — Thông báo
-Theo 3 bước (Chức năng 6, mục 2.2.1):
-- [ ] App đang mở → cảnh báo trực tiếp trên màn hình.
-- [ ] App ở background/killed → **Push Notification (FCM)**.
-- [ ] Nhấn thông báo → mở nội dung chi tiết.
-- [ ] Đánh dấu đã đọc. Mục Thông báo → lịch sử toàn bộ.
+### 3.9. Thông báo & Push Notification
+- [ ] Lắng nghe thông báo real-time khi app đang mở (Socket.IO).
+- [ ] Nhận Push Notification khi app ở background/killed (Firebase FCM).
+- [ ] Nhấn vào thông báo → mở đúng nội dung / màn hình liên quan.
+- [ ] Mục Thông báo: danh sách + đánh dấu đã đọc.
 
-### 3.10. Phân hệ Giảng viên — Điểm danh (Mobile)
-Theo 3 bước (Chức năng 1, mục 2.2.2):
-- [ ] Chọn lớp đang diễn ra → nhấn "Mở điểm danh".
-- [ ] Hiển thị QR Code động trên màn hình điện thoại (auto-refresh 5s).
-- [ ] Giữ phiên mở / chủ động đóng.
-
-### 3.11. Phân hệ Giảng viên — Theo dõi điểm danh (Mobile)
-Theo 3 bước (Chức năng 2, mục 2.2.2):
-- [ ] Danh sách SV cập nhật real-time khi SV quét thành công.
-- [ ] Thấy: đã có mặt / trễ / chưa điểm danh.
-- [ ] Sau phiên: danh sách tổng kết + chỉnh sửa thủ công + lý do.
-
-### 3.12. Phân hệ Giảng viên — Thông báo & Chat (Mobile)
-- [ ] Gửi thông báo khẩn đến lớp.
-- [ ] Chat 1-1 với SV.
-
-### 3.13. Cá nhân (Cả hai role)
-- [ ] Xem / chỉnh sửa thông tin cá nhân.
+### 3.10. Cá nhân (Profile)
+- [ ] Xem thông tin cá nhân.
+- [ ] Chỉnh sửa thông tin cơ bản.
 - [ ] Đổi mật khẩu.
 - [ ] Đăng xuất.
 
 ---
 
-## 4. Kiểm thử (Đối chiếu Chương 5.3)
+## 4. Kiểm thử & Tối ưu
 
-### 4.1. Test Cases theo báo cáo
-- [ ] **TC1:** Điểm danh thành công trong phạm vi 50m.
-- [ ] **TC2:** Từ chối khi ở ngoài phạm vi GPS.
-- [ ] **TC3:** Từ chối khi QR Code hết hạn (>5s).
-- [ ] **TC4:** Xử lý đồng thời nhiều sinh viên điểm danh đầu buổi học.
-
-### 4.2. Functional
-- [ ] Login → phân quyền → redirect đúng role.
-- [ ] Refresh token hoạt động khi access token hết hạn.
-- [ ] QR động thay đổi đúng 5 giây.
+### 4.1. Functional Testing
+- [ ] Luồng đăng nhập → phân quyền → redirect đúng role.
+- [ ] Refresh token hoạt động đúng khi access token hết hạn.
+- [ ] Điểm danh thành công trong phạm vi 50m.
+- [ ] Từ chối điểm danh khi ở ngoài phạm vi GPS.
+- [ ] Từ chối điểm danh khi QR Code hết hạn (sau 5 giây).
+- [ ] QR Code động thay đổi đúng chu kỳ 5 giây.
 - [ ] Thông báo real-time đến đúng người nhận.
-- [ ] Chat gửi/nhận real-time.
-- [ ] Công bố điểm → SV thấy "Chưa có" → sau khi publish → thấy điểm.
-- [ ] Phê duyệt vắng phép → trạng thái điểm danh cập nhật.
+- [ ] Chat gửi/nhận real-time giữa 2 user.
 
-### 4.3. Performance
-- [ ] API response <200ms với Redis cache.
-- [ ] Concurrent attendance: nhiều SV quét cùng lúc.
-- [ ] WebSocket tải trọng cho chat/notification.
-
-### 4.4. Edge Cases
-- [ ] Mất kết nối internet → thông báo lỗi.
+### 4.2. Performance & Edge Cases
+- [ ] Xử lý đồng thời nhiều sinh viên điểm danh đầu buổi học (Kafka + Socket.IO).
+- [ ] Kiểm tra tải trọng WebSocket cho chat/notification.
+- [ ] Offline handling: hiển thị thông báo khi mất kết nối.
 - [ ] GPS không khả dụng trong nhà → fallback message.
-- [ ] QR hết hạn ngay khi vừa quét → thông báo rõ lý do.
+
+### 4.3. UI/UX
+- [x] Responsive trên các kích thước màn hình phổ biến — Tailwind responsive classes.
+- [x] Dark mode hoạt động đúng — ThemeProvider + CSS tokens light/dark.
+- [ ] Loading states và error states cho mọi API call.
