@@ -94,7 +94,8 @@ universe/
 │       └── requirements.txt
 │
 ├── docs/
-│   ├── FRONTEND_CHECKLIST.md         # Checklist frontend chi tiết
+│   ├── BACKEND_CHECKLIST.md          # Checklist backend chi tiết (biden branch)
+│   ├── FRONTEND_CHECKLIST.md         # Checklist frontend chi tiết (fe/web + fe/app)
 │   └── REPORT_OUTLINE.md             # Outline báo cáo TTCS
 │
 └── report/
@@ -173,6 +174,13 @@ Dữ liệu phi cấu trúc, lưu lượng lớn:
 - [ ] **Absence Approval API:** Endpoint cho giảng viên phê duyệt đơn vắng phép.
 - [ ] **Grade Publishing API:** Endpoint công bố điểm → sinh viên thấy trên app.
 - [ ] **Bulk Import API:** Endpoint upload danh sách người dùng từ file.
+- [ ] **Kafka Topics:** `class-notifications`, `attendance-events`.
+- [ ] **Socket.IO Gateways:** AttendanceGateway, NotificationsGateway, ChatGateway.
+- [ ] **Haversine:** Implement chuẩn công thức Haversine cho GPS Geo-fencing.
+- [ ] **Schedule Conflict Detection:** Kiểm tra trùng phòng + trùng giảng viên.
+- [ ] **Audit Log:** Ghi activity_log cho mọi thay đổi quan trọng.
+
+Xem chi tiết tại [docs/BACKEND_CHECKLIST.md](docs/BACKEND_CHECKLIST.md).
 
 ### 8.2. Web Portal (`fe/web` branch)
 - [ ] **Architecture Sync:** Đồng bộ cấu trúc thực tế (`apps/web/`) với `STRUCTURE.md`.
