@@ -1,14 +1,28 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
 export default function LecturerClassesPage() {
-  const classes = [
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [form, setForm] = useState({ code: "", name: "", credits: "3 Tín chỉ", schedule: "", room: "" });
+  const [classes, setClasses] = useState([
     { code: "CS101.O11", name: "Nhập môn Lập trình", credits: "3 Tín chỉ", students: "48/50", schedule: "Thứ 3, Ca 1 (07:30 - 09:30)", room: "A1-204", status: "Đang học", statusType: "success" },
     { code: "MA102.M21", name: "Toán Cao cấp A2", credits: "4 Tín chỉ", students: "60/60", schedule: "Thứ 5, Ca 3 (13:00 - 15:30)", room: "C2-301", status: "Đang học", statusType: "success" },
     { code: "SE304.O12", name: "Phân tích thiết kế hệ thống", credits: "3 Tín chỉ", students: "35/40", schedule: "Thứ 6, Ca 2 (09:30 - 11:30)", room: "B3-105", status: "Kết thúc", statusType: "neutral" },
     { code: "DB205.M11", name: "Hệ quản trị Cơ sở dữ liệu", credits: "3 Tín chỉ", students: "52/60", schedule: "Thứ 4, Ca 1 (07:30 - 09:30)", room: "A1-302", status: "Đang học", statusType: "success" },
-  ];
+  ]);
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    setClasses([...classes, {
+      ...form,
+      students: "0/50",
+      status: "Đang học",
+      statusType: "success"
+    }]);
+    setShowAddModal(false);
+    setForm({ code: "", name: "", credits: "3 Tín chỉ", schedule: "", room: "" });
+  };
 
   return (
     <main className="flex-1 overflow-y-auto mt-16 p-xl bg-background">
@@ -23,7 +37,10 @@ export default function LecturerClassesPage() {
             <span className="material-symbols-outlined text-[20px]">download</span>
             Xuất báo cáo
           </button>
-          <button className="h-10 px-4 flex items-center gap-2 bg-primary text-on-primary rounded-lg font-button text-button shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-colors">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="h-10 px-4 flex items-center gap-2 bg-primary text-on-primary rounded-lg font-button text-button shadow-sm hover:bg-primary-container hover:text-on-primary-container transition-colors"
+          >
             <span className="material-symbols-outlined text-[20px]">add</span>
             Tạo lớp phụ đạo
           </button>
@@ -46,10 +63,10 @@ export default function LecturerClassesPage() {
         <div className="flex-1 min-w-[200px]">
           <label className="block font-label text-label text-on-surface-variant mb-xs uppercase">Trạng thái lớp</label>
           <div className="relative">
-            <select className="w-full appearance-none bg-surface border border-outline-variant rounded-lg pl-4 pr-10 py-2.5 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer transition-colors">
-              <option>Tất cả trạng thái</option>
-              <option selected>Đang học</option>
-              <option>Kết thúc</option>
+            <select defaultValue="Đang học" className="w-full appearance-none bg-surface border border-outline-variant rounded-lg pl-4 pr-10 py-2.5 font-body-md text-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer transition-colors">
+              <option value="Tất cả trạng thái">Tất cả trạng thái</option>
+              <option value="Đang học">Đang học</option>
+              <option value="Kết thúc">Kết thúc</option>
             </select>
             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline-variant pointer-events-none">expand_more</span>
           </div>
@@ -119,6 +136,41 @@ export default function LecturerClassesPage() {
           </table>
         </div>
       </div>
+
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-surface-container-lowest rounded-xl shadow-[var(--shadow-float)] border border-border-muted p-xl w-full max-w-3xl">
+            <h3 className="text-h3 text-on-surface mb-md">Tạo lớp phụ đạo</h3>
+            <form className="space-y-4" onSubmit={handleAdd}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Mã Lớp phụ đạo</label>
+                  <input type="text" value={form.code} onChange={e => setForm({...form, code: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: CS101.PD1" />
+                </div>
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Tên Môn học</label>
+                  <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: Phụ đạo Nhập môn Lập trình" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Lịch học</label>
+                  <input type="text" value={form.schedule} onChange={e => setForm({...form, schedule: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: Thứ 7, Ca 1" />
+                </div>
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Phòng học</label>
+                  <input type="text" value={form.room} onChange={e => setForm({...form, room: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: A1-102" />
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30">
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors text-button text-on-surface">Hủy</button>
+                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-colors text-button">Tạo lớp</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

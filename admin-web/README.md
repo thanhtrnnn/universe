@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UniVerse - Admin Portal (Cổng Quản Trị Hệ Thống)
 
-## Getting Started
+Đây là phân hệ Web Portal dành cho Quản trị viên (Admin) thuộc hệ sinh thái đại học số thông minh **UniVerse**. Dự án được xây dựng bằng Next.js (v16) và TailwindCSS (v4).
 
-First, run the development server:
+## 🚀 Tính năng nổi bật của Admin Portal
+- **Dashboard**: Thống kê số lượng sinh viên, giảng viên, lớp học và tỷ lệ đi học trực quan.
+- **Quản lý Khoa & Phòng ban**: Thêm, sửa, xóa, tìm kiếm các khoa trong trường.
+- **Quản lý Người dùng**: Quản lý tài khoản sinh viên, giảng viên và phân quyền.
+- **Quản lý Lịch học & Điểm số**: Xem và điều chỉnh kế hoạch đào tạo.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Công nghệ sử dụng
+- **Framework**: Next.js 16.2.6 (App Router, Client Component `"use client"`)
+- **UI & Styling**: React 19, TailwindCSS v4, Material Symbols Outlined
+- **State Management**: Zustand (dùng cho quản lý trạng thái client)
+- **Real-time & API (Dự kiến)**: Socket.IO Client, Axios (hiện tại dữ liệu đang được hardcode cho mục đích thiết kế giao diện mẫu)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 💻 Hướng dẫn Cài đặt & Khởi chạy
 
-## Learn More
+### Yêu cầu hệ thống
+- **Node.js**: Phiên bản 20 trở lên.
+- **npm** hoặc **yarn/pnpm/bun**.
 
-To learn more about Next.js, take a look at the following resources:
+### Các bước thực hiện
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Di chuyển vào thư mục của dự án:**
+   Nếu bạn đang ở thư mục gốc của repository `UniVerse`, hãy chuyển vào thư mục `admin-web`:
+   ```bash
+   cd admin-web
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Cài đặt các thư viện phụ thuộc (Dependencies):**
+   ```bash
+   npm install
+   ```
+   *(Hoặc sử dụng `pnpm install`, `yarn install` nếu bạn ưa thích)*
 
-## Deploy on Vercel
+3. **Chạy ứng dụng ở chế độ phát triển (Development Mode):**
+   ```bash
+   npm run dev
+   ```
+   Sau khi chạy lệnh trên thành công, ứng dụng sẽ chạy trên cổng mặc định:
+   👉 **[http://localhost:3000](http://localhost:3000)** (nếu cổng 3000 chưa bị chiếm dụng).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   *Mẹo: Nếu cổng 3000 đã được sử dụng bởi ứng dụng khác (ví dụ: `lecturer-web`), Next.js sẽ tự động chuyển sang cổng tiếp theo như `http://localhost:3001` hoặc bạn có thể chỉ định cổng cụ thể bằng lệnh:*
+   ```bash
+   npm run dev -- -p 3000
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4. **Biên dịch dự án cho môi trường Production (Build):**
+   ```bash
+   npm run build
+   ```
+   Sau khi build xong, bạn có thể khởi chạy server production bằng lệnh:
+   ```bash
+   npm run start
+   ```
+
+---
+
+## 📂 Cấu trúc thư mục chính
+- `src/app/(dashboard)/`: Chứa các trang đã đăng nhập (Dashboard, Departments, Courses, v.v.).
+- `src/components/`: Chứa các component dùng chung (Sidebar, Header, Button, Table, Card, v.v.).
+- `src/context/`: Quản lý giao diện Sáng/Tối (ThemeContext / ThemeProvider).
+- `public/`: Chứa các tài nguyên tĩnh như hình ảnh, biểu tượng.
+
+---
+
+> [!NOTE]  
+> Hiện tại dự án đang ở giai đoạn xây dựng Prototype Giao diện (UI). Các luồng dữ liệu đều được lưu trữ trực tiếp (hardcode) tại client để phục vụ demo trực quan và chưa kết nối cơ sở dữ liệu thực tế hay NestJS Backend.

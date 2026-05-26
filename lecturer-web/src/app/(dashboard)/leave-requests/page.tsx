@@ -1,49 +1,73 @@
 "use client";
 import React, { useState } from "react";
+import api from "@/lib/api";
+import type { LeaveRequestStatus } from "@/types";
 
-const requests = [
-  {
-    id: 1,
-    name: "Trần Thị Mai",
-    mssv: "SV2021001",
-    khoa: "Khóa 21",
-    lop: "SE102.N11",
-    date: "15/10/2023",
-    reason: "Sốt cao không giảm, xin phép nghỉ 1 buổi học thực hành. Đã đi khám tại bệnh viện quận.",
-    hasImage: true,
-    initials: "",
-  },
-  {
-    id: 2,
-    name: "Lê Đức Phát",
-    mssv: "SV2021088",
-    khoa: "Khóa 21",
-    lop: "IT001.O22",
-    date: "16/10/2023 - 17/10/2023",
-    reason: "Gia đình có việc đột xuất ở quê, cần về gấp trong 2 ngày. Có xác nhận của phụ huynh kèm theo.",
-    hasImage: false,
-    initials: "",
-  },
-  {
-    id: 3,
-    name: "Nguyễn Thị Hoa",
-    mssv: "SV2021156",
-    khoa: "Khóa 21",
-    lop: "CS106.P13",
-    date: "18/10/2023",
-    reason: "Không có lý do chi tiết. Chỉ đính kèm đơn.",
-    hasImage: true,
-    initials: "NH",
-  },
+type RequestItem = {
+  id: number;
+  name: string;
+  mssv: string;
+  khoa: string;
+  lop: string;
+  date: string;
+  reason: string;
+  hasImage: boolean;
+  initials: string;
+  status: LeaveRequestStatus;
+};
+
+const initialRequests: RequestItem[] = [
+  { id: 1, name: "Trần Thị Mai", mssv: "SV2021001", khoa: "Khóa 21", lop: "SE102.N11", date: "15/10/2023", reason: "Sốt cao không giảm, xin phép nghỉ 1 buổi học thực hành. Đã đi khám tại bệnh viện quận.", hasImage: true, initials: "", status: "pending" },
+  { id: 2, name: "Lê Đức Phát", mssv: "SV2021088", khoa: "Khóa 21", lop: "IT001.O22", date: "16/10/2023 - 17/10/2023", reason: "Gia đình có việc đột xuất ở quê, cần về gấp trong 2 ngày. Có xác nhận của phụ huynh kèm theo.", hasImage: false, initials: "", status: "pending" },
+  { id: 3, name: "Nguyễn Thị Hoa", mssv: "SV2021156", khoa: "Khóa 21", lop: "CS106.P13", date: "18/10/2023", reason: "Không có lý do chi tiết. Chỉ đính kèm đơn.", hasImage: true, initials: "NH", status: "pending" },
 ];
 
+// Toast
+function Toast({ message, type, onClose }: { message: string; type: "success" | "error"; onClose: () => void }) {
+  React.useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
+  return (
+    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-lg py-md rounded-xl shadow-lg border text-body-md font-semibold ${type === "success" ? "bg-secondary-container text-on-secondary-container border-secondary-container" : "bg-error-container text-on-error-container border-error-container"}`}>
+      <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>{type === "success" ? "check_circle" : "error"}</span>
+      {message}
+    </div>
+  );
+}
+
 export default function LeaveRequestsPage() {
+  const [requests, setRequests] = useState<RequestItem[]>(initialRequests);
   const [tab, setTab] = useState<"pending" | "history">("pending");
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const handleAction = async (id: number, action: "approved" | "rejected") => {
+    setProcessingId(id);
+    try {
+      await api.patch(`/leave-requests/${id}/status`, { status: action });
+      setRequests((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status: action } : r))
+      );
+      setToast({
+        message: action === "approved" ? "Đã chấp nhận đơn vắng phép." : "Đã từ chối đơn vắng phép.",
+        type: "success",
+      });
+    } catch {
+      setToast({ message: "Thao tác thất bại. Vui lòng thử lại.", type: "error" });
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const pendingRequests = requests.filter((r) => r.status === "pending");
+  const historyRequests = requests.filter((r) => r.status !== "pending");
+  const displayRequests = tab === "pending" ? pendingRequests : historyRequests;
+
 
   return (
-    <main className="flex-1 overflow-y-auto p-xl bg-background flex flex-col gap-lg">
-      <div className="flex flex-col gap-md">
-        <h1 className="font-h1 text-h1 text-on-background">Duyệt đơn vắng phép</h1>
+    <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <main className="flex-1 overflow-y-auto p-xl bg-background flex flex-col gap-lg">
+        <div className="flex flex-col gap-md">
+          <h1 className="font-h1 text-h1 text-on-background">Duyệt đơn vắng phép</h1>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-md">
@@ -93,7 +117,12 @@ export default function LeaveRequestsPage() {
 
       {/* Request Cards */}
       <div className="flex flex-col gap-md">
-        {requests.map(req => (
+        {displayRequests.length === 0 ? (
+          <div className="py-16 flex flex-col items-center gap-3 text-on-surface-variant">
+            <span className="material-symbols-outlined text-[48px]" style={{ fontVariationSettings: "'FILL' 1" }}>task_alt</span>
+            <p className="text-body-md">{tab === "pending" ? "Không có đơn chờ duyệt" : "Chưa có lịch sử xử lý"}</p>
+          </div>
+        ) : displayRequests.map(req => (
           <div key={req.id} className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant p-lg flex flex-col md:flex-row gap-lg items-start md:items-center transition-all hover:shadow-md">
             {/* Student Info */}
             <div className="flex items-center gap-4 w-full md:w-1/4">
@@ -143,21 +172,48 @@ export default function LeaveRequestsPage() {
             </div>
 
             {/* Actions */}
-            <div className="w-full md:w-auto flex flex-row md:flex-col gap-sm shrink-0">
-              <button className="flex-1 md:w-full bg-primary text-on-primary font-button text-button px-md py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-colors">
-                <span className="material-symbols-outlined text-[18px]">check</span>Chấp nhận
-              </button>
-              <button className="flex-1 md:w-full bg-error-container text-on-error-container font-button text-button px-md py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#ffcdc7] transition-colors">
-                <span className="material-symbols-outlined text-[18px]">close</span>Từ chối
-              </button>
-            </div>
+            {req.status === "pending" ? (
+              <div className="w-full md:w-auto flex flex-row md:flex-col gap-sm shrink-0">
+                <button
+                  onClick={() => handleAction(req.id, "approved")}
+                  disabled={processingId === req.id}
+                  className="flex-1 md:w-full bg-primary text-on-primary font-button text-button px-md py-2 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-colors disabled:opacity-60"
+                >
+                  {processingId === req.id
+                    ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                    : <span className="material-symbols-outlined text-[18px]">check</span>}
+                  Chấp nhận
+                </button>
+                <button
+                  onClick={() => handleAction(req.id, "rejected")}
+                  disabled={processingId === req.id}
+                  className="flex-1 md:w-full bg-error-container text-on-error-container font-button text-button px-md py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-[#ffcdc7] transition-colors disabled:opacity-60"
+                >
+                  {processingId === req.id
+                    ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                    : <span className="material-symbols-outlined text-[18px]">close</span>}
+                  Từ chối
+                </button>
+              </div>
+            ) : (
+              <div className="shrink-0">
+                <span className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-button font-semibold ${
+                  req.status === "approved" ? "bg-secondary-container text-on-secondary-container" : "bg-error-container text-on-error-container"
+                }`}>
+                  <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    {req.status === "approved" ? "check_circle" : "cancel"}
+                  </span>
+                  {req.status === "approved" ? "Đã chấp nhận" : "Đã từ chối"}
+                </span>
+              </div>
+            )}
           </div>
         ))}
       </div>
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-4">
-        <span className="font-body-sm text-body-sm text-on-surface-variant">Hiển thị 1-3 trong số 12 đơn</span>
+        <span className="font-body-sm text-body-sm text-on-surface-variant">Hiển thị {displayRequests.length} đơn</span>
         <div className="flex gap-2">
           <button className="p-2 border border-outline-variant rounded-lg text-on-surface-variant hover:bg-surface-variant opacity-50" disabled>
             <span className="material-symbols-outlined">chevron_left</span>
@@ -168,5 +224,6 @@ export default function LeaveRequestsPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

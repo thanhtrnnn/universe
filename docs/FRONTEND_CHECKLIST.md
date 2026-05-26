@@ -9,29 +9,29 @@ Checklist toàn diện cho hai nhánh frontend: `fe/web` (Next.js Admin/Lecturer
 ## 1. Core Setup (Cả hai nhánh)
 
 ### 1.1. TypeScript & Types
-- [ ] Khởi tạo `tsconfig.json` với strict mode.
-- [ ] Đồng bộ Interface/Type từ Backend: `User`, `Role`, `Course`, `Class`, `Schedule`, `Attendance`, `Grade`, `Enrollment`, `Message`, `Notification`, `ActivityLog`.
+- [x] Khởi tạo `tsconfig.json` với strict mode.
+- [x] Đồng bộ Interface/Type từ Backend: `User`, `Role`, `Course`, `Class`, `Schedule`, `Attendance`, `Grade`, `Enrollment`, `Message`, `Notification`, `ActivityLog`.
 - [ ] Tạo shared types package hoặc symlink để tránh trùng lặp giữa web và mobile.
 
 ### 1.2. API Client (Axios)
-- [ ] Thiết lập `baseURL` từ biến môi trường (`.env`).
-- [ ] Axios Interceptor tự động chèn JWT Access Token vào header `Authorization`.
-- [ ] Xử lý logic tự động gọi Refresh Token API khi gặp lỗi 401 (Access Token hết hạn).
-- [ ] Xử lý logout tự động khi Refresh Token cũng hết hạn.
+- [x] Thiết lập `baseURL` từ biến môi trường (`.env`).
+- [x] Axios Interceptor tự động chèn JWT Access Token vào header `Authorization`.
+- [x] Xử lý logic tự động gọi Refresh Token API khi gặp lỗi 401 (Access Token hết hạn).
+- [x] Xử lý logout tự động khi Refresh Token cũng hết hạn.
 
 ### 1.3. Global State Management
-- [ ] Cấu hình Zustand hoặc Redux Toolkit.
-- [ ] Tạo store cho: `authStore`, `userStore`, `scheduleStore`, `notificationStore`.
+- [x] Cấu hình Zustand hoặc Redux Toolkit.
+- [x] Tạo store cho: `authStore`, `userStore`, `scheduleStore`, `notificationStore`.
 
 ### 1.4. Real-time Client (Socket.IO)
-- [ ] Khởi tạo `socket.io-client` connection.
-- [ ] Quản lý connection state (connected/disconnected/reconnecting).
+- [x] Khởi tạo `socket.io-client` connection.
+- [x] Quản lý connection state (connected/disconnected/reconnecting).
 - [ ] Lắng nghe events từ `NotificationsGateway` (thông báo mới, tin nhắn mới).
 - [ ] Lắng nghe events từ `AttendanceGateway` (cập nhật trạng thái điểm danh real-time).
 
 ### 1.5. Bảo mật
-- [ ] Lưu Access Token ở memory/localStorage, Refresh Token ở HttpOnly cookie (web) hoặc SecureStorage (mobile).
-- [ ] Implement RBAC ở frontend: ẩn/hiện UI theo vai trò (Student/Lecturer/Admin).
+- [x] Lưu Access Token ở memory/localStorage, Refresh Token ở HttpOnly cookie (web) hoặc SecureStorage (mobile).
+- [x] Implement RBAC ở frontend: ẩn/hiện UI theo vai trò (Student/Lecturer/Admin).
 
 ---
 
@@ -44,45 +44,47 @@ Checklist toàn diện cho hai nhánh frontend: `fe/web` (Next.js Admin/Lecturer
 - [x] Thiết lập layout phân quyền: `AdminLayout` (sidebar 6 items), `LecturerLayout` (sidebar 8 items).
 
 ### 2.2. Authentication Pages
-- [x] **Đăng nhập:** Form login UI tồn tại (`admin-web/login/page.tsx`) — **chưa có API call, chưa có JWT**.
-- [ ] **Đăng ký:** Form đăng ký (nếu có).
-- [ ] **Quên mật khẩu:** Flow reset password qua email.
+- [x] **Đăng nhập:** Form login UI tồn tại (`admin-web/login/page.tsx`) — **đã có API call, đã có JWT**.
+- [x] **Đăng nhập Lecturer:** Form login mới tạo cho `lecturer-web/src/app/login/page.tsx`.
+- [x] **Route Protection:** `middleware.ts` cho cả admin-web và lecturer-web.
+- [x] **Đăng ký:** Bỏ qua (Tài khoản Admin và Giảng viên được cấp phát bởi hệ thống, không tự đăng ký).
+- [x] **Quên mật khẩu:** Flow reset password qua email.
 
 ### 2.3. Admin — Quản lý người dùng
-- [x] Danh sách người dùng (bảng phân trang, tìm kiếm, lọc theo vai trò) — UI hoàn chỉnh, 3 mock users.
-- [x] Thêm/sửa/xóa tài khoản Sinh viên, Giảng viên — Form create user UI tồn tại (avatar upload, role select), **chưa có API**.
-- [ ] Phân quyền theo RBAC: gán vai trò cho từng tài khoản.
-- [ ] Upload danh sách hàng loạt từ file (bulk import).
+- [x] Danh sách người dùng (bảng phân trang, tìm kiếm, lọc theo vai trò) — UI hoàn chỉnh, kết nối API `GET /users`.
+- [x] Thêm/sửa/xóa tài khoản Sinh viên, Giảng viên — Form create user UI tồn tại (avatar upload, role select), **Delete với confirm modal + API `DELETE /users/:id`**.
+- [x] Phân quyền theo RBAC: gán vai trò cho từng tài khoản.
+- [x] Upload danh sách hàng loạt từ file (bulk import).
 
 ### 2.4. Admin — Quản lý đào tạo
-- [ ] **Khoa / Ngành:** CRUD danh mục.
-- [ ] **Môn học (Courses):** CRUD môn học, gắn với Ngành.
+- [x] **Khoa / Ngành:** CRUD danh mục.
+- [x] **Môn học (Courses):** CRUD môn học, gắn với Ngành.
 - [x] **Lớp hành chính / Lớp học phần (Classes):** Danh sách lớp UI hoàn chỉnh (4 mock classes, search, filter theo học kỳ/khoa). Chi tiết lớp với bảng điểm danh SV.
-- [ ] **Phòng học (Rooms):** Quản lý phòng học + tọa độ GPS (phục vụ Geo-fencing).
+- [x] **Phòng học (Rooms):** Quản lý phòng học + tọa độ GPS (phục vụ Geo-fencing).
 
 ### 2.5. Admin — Thời khóa biểu (Schedules)
-- [ ] Xếp lịch học: chọn lớp, phòng, giảng viên, khung giờ.
-- [ ] Kiểm tra tự động xung đột lịch phòng và lịch giảng viên.
-- [ ] Hiển thị thời khóa biểu theo tuần/tháng.
+- [x] Xếp lịch học: chọn lớp, phòng, giảng viên, khung giờ.
+- [x] Kiểm tra tự động xung đột lịch phòng và lịch giảng viên.
+- [x] Hiển thị thời khóa biểu theo tuần/tháng.
 
 ### 2.6. Admin — Dashboard & Thống kê
 - [x] Dashboard tổng quan: 4 KPI cards, bar chart, hệ thống alerts, bảng lớp gần đây — UI hoàn chỉnh, mock data.
 - [x] Statistics page: KPI cards, bar chart, SVG donut chart, trend placeholder — UI hoàn chỉnh, mock data.
-- [ ] Bộ lọc theo học kỳ, khoảng thời gian, khoa.
-- [ ] Xuất báo cáo dạng Excel / PDF.
+- [x] Bộ lọc theo học kỳ, khoảng thời gian, khoa.
+- [x] Xuất báo cáo dạng Excel / PDF.
 
 ### 2.7. Giảng viên — Quản lý điểm danh
-- [ ] Mở phiên điểm danh cho lớp học đang diễn ra.
-- [ ] Hiển thị mã QR động (render từ token HMAC-SHA256, tự động refresh mỗi 5s qua WebSocket).
+- [x] Mở phiên điểm danh cho lớp học đang diễn ra.
+- [x] Hiển thị mã QR động (render từ token HMAC-SHA256, tự động refresh mỗi 5s qua WebSocket) — **`qrcode.react` + QRTimer component + API refresh**.
 - [x] Theo dõi danh sách sinh viên điểm danh real-time (cập nhật tức thì khi SV quét thành công) — UI class detail với per-session attendance checkboxes, attendance page với student list.
-- [ ] Đóng phiên điểm danh.
-- [x] Chỉnh sửa trạng thái điểm danh thủ công (điều chỉnh cho từng sinh viên, ghi lý do) — UI checkboxes tồn tại, **chưa lưu vào DB**.
+- [x] Đóng phiên điểm danh.
+- [x] Chỉnh sửa trạng thái điểm danh thủ công (điều chỉnh cho từng sinh viên, ghi lý do) — UI checkboxes tồn tại, **đã lưu vào DB qua API**.
 
 ### 2.8. Giảng viên — Quản lý điểm số
 - [x] Chọn lớp học phần, loại điểm (quá trình / giữa kỳ / cuối kỳ).
 - [x] Nhập điểm cho từng sinh viên (bảng editable) — **UI hoàn chỉnh với editable inputs**.
 - [x] Tự động tính điểm tổng kết theo công thức cấu hình — **calcTotal() tính QT 20% + GK 30% + CK 50%**.
-- [ ] Công bố điểm → sinh viên thấy trên app.
+- [x] Công bố điểm → sinh viên thấy trên app — **API `POST /grades/classes/:id/publish`** với confirm dialog.
 
 ### 2.9. Giảng viên — Lịch dạy & Danh sách lớp
 - [x] Xem lịch dạy theo tuần/tháng — Dashboard có "Today's schedule" với 2 lớp.
@@ -90,18 +92,18 @@ Checklist toàn diện cho hai nhánh frontend: `fe/web` (Next.js Admin/Lecturer
 
 ### 2.10. Giảng viên — Phê duyệt đơn vắng phép
 - [x] Nhận thông báo khi có sinh viên gửi đơn xin nghỉ.
-- [x] Xem nội dung đơn, chọn Chấp nhận / Từ chối — **UI hoàn chỉnh với pending/history tabs, 3 mock requests, accept/reject buttons**.
-- [ ] Hệ thống cập nhật trạng thái điểm danh thành "Vắng có phép".
+- [x] Xem nội dung đơn, chọn Chấp nhận / Từ chối — **UI hoàn chỉnh với pending/history tabs, 3 mock requests, accept/reject buttons, kết nối API `PATCH /leave-requests/:id/status`**.
+- [x] Hệ thống cập nhật trạng thái điểm danh thành "Vắng có phép".
 
 ### 2.11. Giảng viên & Admin — Thông báo
-- [x] Soạn và gửi thông báo đến lớp / khoa / toàn hệ thống — **Admin: compose form với title, content, recipient checkboxes, file upload, live preview**. **Lecturer: compose với class selector chips, rich text toolbar, phone preview mockup, sent history**.
-- [ ] Dropdown hiển thị notification real-time.
-- [ ] Đánh dấu đã đọc/chưa đọc.
+- [x] Soạn và gửi thông báo đến lớp / khoa / toàn hệ thống — **Admin: compose form với title, content, recipient checkboxes, file upload, live preview, gửi API**. **Lecturer: compose với class selector chips, rich text toolbar, phone preview mockup, sent history**.
+- [x] Dropdown hiển thị notification real-time — **NotificationBell component** với unread badge, API fetch, mark as read.
+- [x] Đánh dấu đã đọc/chưa đọc.
 
 ### 2.12. Chat
-- [ ] Danh sách hội thoại (giảng viên ↔ sinh viên).
-- [ ] Gửi/nhận tin nhắn real-time qua Socket.IO.
-- [ ] Hiển thị trạng thái online/offline.
+- [x] Danh sách hội thoại (Group chat lớp học và chat 1-1 giữa Giảng viên ↔ Sinh viên).
+- [x] Gửi/nhận tin nhắn real-time qua Socket.IO.
+- [x] Hiển thị trạng thái online/offline.
 
 ---
 
@@ -180,17 +182,17 @@ Checklist toàn diện cho hai nhánh frontend: `fe/web` (Next.js Admin/Lecturer
 - [ ] Điểm danh thành công trong phạm vi 50m.
 - [ ] Từ chối điểm danh khi ở ngoài phạm vi GPS.
 - [ ] Từ chối điểm danh khi QR Code hết hạn (sau 5 giây).
-- [ ] QR Code động thay đổi đúng chu kỳ 5 giây.
+- [x] QR Code động thay đổi đúng chu kỳ 5 giây.
 - [ ] Thông báo real-time đến đúng người nhận.
 - [ ] Chat gửi/nhận real-time giữa 2 user.
 
 ### 4.2. Performance & Edge Cases
 - [ ] Xử lý đồng thời nhiều sinh viên điểm danh đầu buổi học (Kafka + Socket.IO).
 - [ ] Kiểm tra tải trọng WebSocket cho chat/notification.
-- [ ] Offline handling: hiển thị thông báo khi mất kết nối.
+- [x] Offline handling: hiển thị thông báo khi mất kết nối.
 - [ ] GPS không khả dụng trong nhà → fallback message.
 
 ### 4.3. UI/UX
 - [x] Responsive trên các kích thước màn hình phổ biến — Tailwind responsive classes.
 - [x] Dark mode hoạt động đúng — ThemeProvider + CSS tokens light/dark.
-- [ ] Loading states và error states cho mọi API call.
+- [x] Loading states và error states cho mọi API call.

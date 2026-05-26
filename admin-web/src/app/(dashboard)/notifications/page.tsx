@@ -1,11 +1,66 @@
+"use client";
 import React, { useState } from "react";
+import api from "@/lib/api";
 
 export default function NotificationsPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
+  const [isSending, setIsSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const targetOptions = [
+    { label: "Tất cả người dùng", value: "all" },
+    { label: "Sinh viên", value: "students" },
+    { label: "Giảng viên", value: "lecturers" },
+    { label: "Theo khoa chuyên môn", value: "department" },
+  ];
+
+  const toggleTarget = (val: string) => {
+    setSelectedTargets((prev) =>
+      prev.includes(val) ? prev.filter((v) => v !== val) : [...prev, val]
+    );
+  };
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim() || !content.trim() || selectedTargets.length === 0) {
+      setError("Vui lòng điền đầy đủ thông tin và chọn đối tượng nhận.");
+      return;
+    }
+    setIsSending(true);
+    setError(null);
+    try {
+      await api.post("/notifications", {
+        title,
+        content,
+        type: "system",
+        targetType: selectedTargets.includes("all") ? "all" : "department",
+        targets: selectedTargets,
+      });
+      setSent(true);
+      setTitle("");
+      setContent("");
+      setSelectedTargets([]);
+      setTimeout(() => setSent(false), 4000);
+    } catch {
+      setError("Gửi thông báo thất bại. Vui lòng thử lại.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
 
   return (
     <main className="flex-1 pt-20 px-xl pb-xl bg-background overflow-y-auto">
+      {/* Success Toast */}
+      {sent && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-lg py-md rounded-xl shadow-lg bg-secondary-container text-on-secondary-container border border-secondary-container text-body-md font-semibold">
+          <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+          Thông báo đã được gửi thành công!
+        </div>
+      )}
       {/* Page Header */}
       <div className="mb-lg">
         <h1 className="font-h1 text-h1 text-on-surface">Gửi thông báo hệ thống</h1>
@@ -19,7 +74,13 @@ export default function NotificationsPage() {
         {/* Left Column: Form (8 cols) */}
         <div className="col-span-12 lg:col-span-8">
           <div className="bg-surface-container-lowest rounded-xl shadow-[0px_4px_20px_rgba(26,26,26,0.05)] border border-[#EEEDFE] p-lg">
-            <form className="space-y-lg">
+            <form className="space-y-lg" onSubmit={handleSend}>
+              {error && (
+                <div className="flex items-center gap-2 bg-error-container text-on-error-container px-md py-sm rounded-lg text-body-sm">
+                  <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>error</span>
+                  {error}
+                </div>
+              )}
               {/* Field: Tiêu đề */}
               <div>
                 <label className="block font-label text-label text-on-surface mb-sm">
@@ -54,9 +115,14 @@ export default function NotificationsPage() {
                   Chọn đối tượng nhận <span className="text-error">*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
-                  {["Tất cả người dùng", "Sinh viên", "Giảng viên", "Theo khoa chuyên môn"].map((label) => (
-                    <label key={label} className="flex items-center gap-3 p-3 rounded-lg border border-outline-variant hover:bg-surface-container-low cursor-pointer transition-colors">
-                      <input type="checkbox" className="w-5 h-5 rounded text-primary border-outline-variant focus:ring-primary" />
+                  {targetOptions.map(({ label, value }) => (
+                    <label key={value} className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedTargets.includes(value) ? "border-primary bg-primary/5" : "border-outline-variant hover:bg-surface-container-low"}`}>
+                      <input
+                        type="checkbox"
+                        className="w-5 h-5 rounded text-primary border-outline-variant focus:ring-primary"
+                        checked={selectedTargets.includes(value)}
+                        onChange={() => toggleTarget(value)}
+                      />
                       <span className="font-body-md text-body-md text-on-surface">{label}</span>
                     </label>
                   ))}
@@ -88,15 +154,19 @@ export default function NotificationsPage() {
                 <button
                   className="px-lg py-sm rounded-lg font-button text-button text-on-surface border border-outline-variant hover:bg-surface-container-low transition-colors"
                   type="button"
+                  onClick={() => { setTitle(""); setContent(""); setSelectedTargets([]); setError(null); }}
                 >
                   Hủy bỏ
                 </button>
                 <button
-                  className="px-lg py-sm rounded-lg font-button text-button bg-[#6C63FF] text-white hover:bg-[#5a52d9] shadow-sm flex items-center gap-2 transition-colors"
-                  type="button"
+                  className="px-lg py-sm rounded-lg font-button text-button bg-[#6C63FF] text-white hover:bg-[#5a52d9] shadow-sm flex items-center gap-2 transition-colors disabled:opacity-60"
+                  type="submit"
+                  disabled={isSending}
                 >
-                  <span className="material-symbols-outlined text-[18px]">send</span>
-                  Gửi thông báo
+                  {isSending
+                    ? <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                    : <span className="material-symbols-outlined text-[18px]">send</span>}
+                  {isSending ? "Đang gửi..." : "Gửi thông báo"}
                 </button>
               </div>
             </form>

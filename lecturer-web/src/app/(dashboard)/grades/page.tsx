@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import api from "@/lib/api";
 
 const initialStudents = [
   { stt: 1, mssv: "20520001", name: "Nguyễn Văn An", qt: 8.5, gk: 7.0, ck: 8.0 as number | null },
@@ -14,14 +15,63 @@ function calcTotal(qt: number, gk: number, ck: number | null) {
   return Math.round((qt * 0.2 + gk * 0.3 + ck * 0.5) * 10) / 10;
 }
 
+// Toast
+function Toast({ message, type, onClose }: { message: string; type: "success" | "error"; onClose: () => void }) {
+  React.useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
+  return (
+    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-lg py-md rounded-xl shadow-lg border text-body-md font-semibold ${type === "success" ? "bg-secondary-container text-on-secondary-container border-secondary-container" : "bg-error-container text-on-error-container border-error-container"}`}>
+      <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>{type === "success" ? "check_circle" : "error"}</span>
+      {message}
+    </div>
+  );
+}
+
 export default function GradesPage() {
   const [students, setStudents] = useState(initialStudents);
   const [search, setSearch] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const classId = "SE102.N11"; // In real app, get from route params
 
   const handleChange = (stt: number, field: "qt" | "gk" | "ck", val: string) => {
     setStudents(prev => prev.map(s =>
       s.stt === stt ? { ...s, [field]: val === "" ? null : parseFloat(val) } : s
     ));
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const payload = students.map(s => ({
+        studentCode: s.mssv,
+        qtScore: s.qt,
+        gkScore: s.gk,
+        ckScore: s.ck,
+      }));
+      await api.post(`/grades/classes/${classId}/bulk`, { grades: payload });
+      setToast({ message: "Đã lưu điểm thành công!", type: "success" });
+    } catch {
+      setToast({ message: "Lưu điểm thất bại. Vui lòng thử lại.", type: "error" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!window.confirm("Bạn có chắc muốn công bố điểm? Sinh viên sẽ thấy điểm ngay lập tức.")) return;
+    setIsPublishing(true);
+    try {
+      await api.post(`/grades/classes/${classId}/publish`);
+      setIsPublished(true);
+      setToast({ message: "Điểm đã được công bố thành công! Sinh viên có thể xem trên app.", type: "success" });
+    } catch {
+      setToast({ message: "Công bố điểm thất bại. Vui lòng thử lại.", type: "error" });
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const filtered = students.filter(s =>
@@ -30,7 +80,9 @@ export default function GradesPage() {
   const enteredCount = students.filter(s => s.ck !== null).length;
 
   return (
-    <main className="flex-1 overflow-y-auto p-xl bg-background flex flex-col gap-lg">
+    <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <main className="flex-1 overflow-y-auto p-xl bg-background flex flex-col gap-lg">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-md">
         <div>
@@ -42,11 +94,25 @@ export default function GradesPage() {
           <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">Môn học: Lập trình Web</p>
         </div>
         <div className="flex items-center gap-md">
-          <button className="bg-primary-fixed text-on-primary-fixed font-button text-button h-10 px-md rounded hover:opacity-90 transition-opacity flex items-center gap-sm">
-            <span className="material-symbols-outlined text-[20px]">save</span>Lưu tất cả
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-primary-fixed text-on-primary-fixed font-button text-button h-10 px-md rounded hover:opacity-90 transition-opacity flex items-center gap-sm disabled:opacity-60"
+          >
+            {isSaving
+              ? <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+              : <span className="material-symbols-outlined text-[20px]">save</span>}
+            {isSaving ? "Đang lưu..." : "Lưu tất cả"}
           </button>
-          <button className="bg-primary text-on-primary font-button text-button h-10 px-md rounded hover:opacity-90 transition-opacity shadow-md flex items-center gap-sm">
-            <span className="material-symbols-outlined text-[20px]">publish</span>Công bố điểm
+          <button
+            onClick={handlePublish}
+            disabled={isPublishing || isPublished}
+            className={`font-button text-button h-10 px-md rounded transition-opacity shadow-md flex items-center gap-sm disabled:opacity-60 ${isPublished ? "bg-secondary text-on-secondary" : "bg-primary text-on-primary hover:opacity-90"}`}
+          >
+            {isPublishing
+              ? <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+              : <span className="material-symbols-outlined text-[20px]">{isPublished ? "check_circle" : "publish"}</span>}
+            {isPublishing ? "Đang công bố..." : isPublished ? "Đã công bố" : "Công bố điểm"}
           </button>
         </div>
       </div>
@@ -135,5 +201,6 @@ export default function GradesPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

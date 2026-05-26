@@ -196,9 +196,9 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <button className="w-full mt-lg py-2 px-md bg-primary/10 text-primary hover:bg-primary/20 text-button rounded-lg transition-colors">
+          <Link href="/alerts" className="w-full mt-lg py-2 px-md bg-primary/10 text-primary hover:bg-primary/20 text-button rounded-lg transition-colors flex justify-center items-center">
             Xem tất cả cảnh báo
-          </button>
+          </Link>
         </div>
       </div>
 

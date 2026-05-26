@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
 export default function ClassDetailPage({ params }: { params: { id: string } }) {
@@ -10,6 +10,29 @@ export default function ClassDetailPage({ params }: { params: { id: string } }) 
     { stt: 3, mssv: "SV2023089", name: "Lê Đình Minh", present: 8, absent: 4, percent: "66%", status: "Warning" },
     { stt: 4, mssv: "SV2023102", name: "Phạm Thu Trang", present: 11, absent: 1, percent: "91%", status: "Normal" },
   ];
+
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [showGradeModal, setShowGradeModal] = useState(false);
+  const [notificationForm, setNotificationForm] = useState({ title: "", content: "", channel: "both" });
+  const [gradeFile, setGradeFile] = useState<File | null>(null);
+
+  const handleSendNotification = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert("Đã gửi thông báo thành công!");
+    setShowNotificationModal(false);
+    setNotificationForm({ title: "", content: "", channel: "both" });
+  };
+
+  const handleUploadGrades = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!gradeFile) {
+      alert("Vui lòng chọn file Excel bảng điểm.");
+      return;
+    }
+    alert("Đã cập nhật điểm thành công từ file " + gradeFile.name);
+    setShowGradeModal(false);
+    setGradeFile(null);
+  };
 
   return (
     <main className="flex-1 pt-20 px-xl pb-xl bg-background overflow-y-auto">
@@ -30,11 +53,11 @@ export default function ClassDetailPage({ params }: { params: { id: string } }) 
           <p className="font-body-md text-body-md text-on-surface-variant mt-1">Giảng viên: PGS. TS. Nguyễn Văn A • Học kỳ 1, 2023-2024</p>
         </div>
         <div className="flex gap-md w-full md:w-auto">
-          <button className="flex-1 md:flex-none bg-surface-container-highest text-on-surface font-button text-button px-4 py-2 rounded-lg hover:bg-surface-dim transition-colors duration-200 flex items-center justify-center gap-sm">
+          <button onClick={() => setShowNotificationModal(true)} className="flex-1 md:flex-none bg-surface-container-highest text-on-surface font-button text-button px-4 py-2 rounded-lg hover:bg-surface-dim transition-colors duration-200 flex items-center justify-center gap-sm">
             <span className="material-symbols-outlined text-[20px]">campaign</span>
             Gửi thông báo lớp
           </button>
-          <button className="flex-1 md:flex-none bg-[#6C63FF] text-white font-button text-button px-4 py-2 rounded-lg hover:bg-[#554cb9] transition-colors duration-200 flex items-center justify-center gap-sm shadow-[0px_4px_12px_rgba(108,99,255,0.25)]">
+          <button onClick={() => setShowGradeModal(true)} className="flex-1 md:flex-none bg-[#6C63FF] text-white font-button text-button px-4 py-2 rounded-lg hover:bg-[#554cb9] transition-colors duration-200 flex items-center justify-center gap-sm shadow-[0px_4px_12px_rgba(108,99,255,0.25)]">
             <span className="material-symbols-outlined text-[20px]">edit_document</span>
             Nhập điểm
           </button>
@@ -154,6 +177,99 @@ export default function ClassDetailPage({ params }: { params: { id: string } }) 
           </div>
         </div>
       </div>
+
+      {/* Notification Modal */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-surface-container-lowest rounded-xl shadow-[var(--shadow-float)] border border-border-muted p-xl w-full max-w-2xl">
+            <h3 className="text-h3 text-on-surface mb-md">Gửi thông báo cho lớp CS101</h3>
+            <form className="space-y-4" onSubmit={handleSendNotification}>
+              <div>
+                <label className="block text-label font-label text-on-surface-variant mb-1">Tiêu đề thông báo <span className="text-error">*</span></label>
+                <input type="text" value={notificationForm.title} onChange={e => setNotificationForm({...notificationForm, title: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:border-primary outline-none" required placeholder="VD: Thay đổi lịch học tuần tới" />
+              </div>
+              <div>
+                <label className="block text-label font-label text-on-surface-variant mb-1">Nội dung <span className="text-error">*</span></label>
+                <textarea rows={5} value={notificationForm.content} onChange={e => setNotificationForm({...notificationForm, content: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 text-body-md focus:border-primary outline-none resize-none" required placeholder="Nhập nội dung thông báo..."></textarea>
+              </div>
+              <div>
+                <label className="block text-label font-label text-on-surface-variant mb-2">Kênh gửi</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="channel" value="in-app" checked={notificationForm.channel === 'in-app'} onChange={e => setNotificationForm({...notificationForm, channel: e.target.value})} className="w-4 h-4 text-primary focus:ring-primary border-outline-variant" />
+                    <span className="text-body-md text-on-surface">Chỉ thông báo hệ thống</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="channel" value="both" checked={notificationForm.channel === 'both'} onChange={e => setNotificationForm({...notificationForm, channel: e.target.value})} className="w-4 h-4 text-primary focus:ring-primary border-outline-variant" />
+                    <span className="text-body-md text-on-surface">Hệ thống & Gửi Email</span>
+                  </label>
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30">
+                <button type="button" onClick={() => setShowNotificationModal(false)} className="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors font-button text-button">Hủy</button>
+                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-colors font-button text-button flex items-center gap-2">
+                  <span className="material-symbols-outlined text-[18px]">send</span>
+                  Gửi thông báo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Grade Import Modal */}
+      {showGradeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-surface-container-lowest rounded-xl shadow-[var(--shadow-float)] border border-border-muted p-xl w-full max-w-3xl">
+            <h3 className="text-h3 text-on-surface mb-md">Nhập điểm lớp CS101</h3>
+            <form onSubmit={handleUploadGrades}>
+              <div className="mb-6 flex gap-4">
+                <button type="button" className="flex-1 py-4 border-2 border-primary bg-primary-container/10 rounded-xl flex flex-col items-center justify-center text-primary gap-2 transition-colors">
+                  <span className="material-symbols-outlined text-[32px]">upload_file</span>
+                  <span className="font-semibold text-body-md">Tải lên file Excel</span>
+                </button>
+                <button type="button" className="flex-1 py-4 border-2 border-outline-variant rounded-xl flex flex-col items-center justify-center text-on-surface-variant hover:border-primary hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-[32px]">edit_square</span>
+                  <span className="font-semibold text-body-md">Nhập điểm thủ công</span>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <div 
+                  className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-colors ${gradeFile ? "border-primary bg-primary-container/10" : "border-outline-variant hover:border-primary hover:bg-surface-container-low"}`}
+                >
+                  <span className={`material-symbols-outlined text-[48px] mb-4 ${gradeFile ? "text-primary" : "text-outline"}`}>
+                    {gradeFile ? "description" : "cloud_upload"}
+                  </span>
+                  {gradeFile ? (
+                    <div>
+                      <p className="text-body-lg font-semibold text-on-surface mb-1">{gradeFile.name}</p>
+                      <p className="text-body-sm text-on-surface-variant">{(gradeFile.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-body-lg text-on-surface font-semibold mb-1">Kéo thả file Excel điểm vào đây</p>
+                      <p className="text-body-md text-on-surface-variant mb-4">hoặc</p>
+                      <label className="bg-surface-container-high hover:bg-surface-dim text-on-surface px-4 py-2 rounded-lg font-button cursor-pointer transition-colors inline-block border border-outline-variant">
+                        Chọn file từ máy
+                        <input type="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" className="hidden" onChange={(e) => e.target.files && setGradeFile(e.target.files[0])} />
+                      </label>
+                    </div>
+                  )}
+                </div>
+                <div className="mt-3 text-right">
+                  <a href="#" className="text-body-sm text-primary hover:underline">Tải file mẫu định dạng điểm (.xlsx)</a>
+                </div>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30">
+                <button type="button" onClick={() => { setShowGradeModal(false); setGradeFile(null); }} className="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors font-button text-button">Hủy</button>
+                <button type="submit" disabled={!gradeFile} className="px-4 py-2 rounded-lg bg-[#6C63FF] text-white hover:bg-[#554cb9] transition-colors font-button text-button disabled:opacity-50">Cập nhật điểm</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

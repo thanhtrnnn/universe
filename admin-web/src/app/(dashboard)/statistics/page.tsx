@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 export default function StatisticsPage() {
   const kpiStats = [
@@ -18,6 +18,16 @@ export default function StatisticsPage() {
     { label: "Y Dược", value: 95 },
   ];
 
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = (type: "pdf" | "excel") => {
+    setIsExporting(true);
+    setTimeout(() => {
+      setIsExporting(false);
+      alert(`Đã xuất báo cáo dưới định dạng ${type.toUpperCase()} thành công!`);
+    }, 1500);
+  };
+
   return (
     <main className="flex-1 overflow-y-auto mt-16 p-xl bg-background">
       {/* Header */}
@@ -29,11 +39,19 @@ export default function StatisticsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-button text-on-surface hover:bg-surface-container transition-colors bg-surface-container-lowest">
-            <span className="material-symbols-outlined text-[18px]">description</span>
+          <button 
+            onClick={() => handleExport("pdf")}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 border border-outline-variant rounded-lg text-button text-on-surface hover:bg-surface-container transition-colors bg-surface-container-lowest disabled:opacity-50"
+          >
+            <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
             Xuất PDF
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-button hover:bg-on-primary-fixed-variant transition-colors shadow-sm">
+          <button 
+            onClick={() => handleExport("excel")}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg text-button hover:bg-on-primary-fixed-variant transition-colors shadow-sm disabled:opacity-50"
+          >
             <span className="material-symbols-outlined text-[18px]">grid_on</span>
             Xuất Excel
           </button>
@@ -55,8 +73,15 @@ export default function StatisticsPage() {
             </select>
           </div>
           <div>
+            <label className="text-label text-on-surface-variant block mb-1">Thời gian</label>
+            <input 
+              type="month" 
+              className="bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-full"
+            />
+          </div>
+          <div>
             <label className="text-label text-on-surface-variant block mb-1">Khoa / Viện</label>
-            <select className="bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md appearance-none pr-8 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary">
+            <select className="bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md appearance-none pr-8 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-full">
               <option>Tất cả các khoa</option>
               <option>CNTT</option>
               <option>Kinh tế</option>

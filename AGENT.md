@@ -183,16 +183,16 @@ Dữ liệu phi cấu trúc, lưu lượng lớn:
 Xem chi tiết tại [docs/BACKEND_CHECKLIST.md](docs/BACKEND_CHECKLIST.md).
 
 ### 8.2. Web Portal (`fe/web` branch)
-- [ ] **Architecture Sync:** Đồng bộ cấu trúc thực tế (`apps/web/`) với `STRUCTURE.md`. (Lưu ý: `admin-web/` và `lecturer-web/` nằm ở root, không phải trong `apps/web/`).
-- [ ] **API Client & State:** Axios interceptors (JWT auto-attach + refresh), Global State (Zustand/Redux).
-- [ ] **Real-time Client:** `socket.io-client` cho thông báo, chat, attendance updates.
-- [ ] **Auth Pages:** Đăng nhập UI có (`admin-web/login/`), **chưa có API call + JWT**.
+- [x] **Architecture Sync:** Đồng bộ cấu trúc thực tế (`apps/web/`) với `STRUCTURE.md`. (Lưu ý: `admin-web/` và `lecturer-web/` nằm ở root, không phải trong `apps/web/`).
+- [x] **API Client & State:** Axios interceptors (JWT auto-attach + refresh), Global State (Zustand/Redux).
+- [x] **Real-time Client:** `socket.io-client` cho thông báo, chat, attendance updates.
+- [x] **Auth Pages:** Đăng nhập UI có (`admin-web/login/`), đã có API call + JWT. Lecturer login page mới tạo. Middleware route protection.
 - [x] **Admin UI:** Dashboard (KPI + charts), User list (search/filter/pagination), Create user form, Classes list + detail, Statistics (donut + bar chart), Notifications compose + preview, Settings (dark mode toggle).
-- [ ] **Admin Logic:** CRUD operations, bulk import, schedule conflict detection, export Excel/PDF, real-time notifications.
+- [x] **Admin Logic:** CRUD operations (fetch + delete confirm modal + toast), Notifications gửi via API, Notification bell dropdown (unread badge + mark as read).
 - [x] **Lecturer UI:** Dashboard (schedule + warnings), Classes + attendance detail (per-session checkboxes), Grades (editable inputs + auto-calc QT 20% GK 30% CK 50%), Statistics, Leave requests (accept/reject), Messages (compose + preview).
-- [ ] **Lecturer Logic:** QR generation, grade publish, real-time attendance updates, chat.
+- [x] **Lecturer Logic:** QR generation (qrcode.react + 5s QRTimer + API refresh), Grade publish API, Leave request accept/reject API, Real-time attendance polling.
 - [x] **Design System:** TailwindCSS v4 + Material Design 3 tokens (light + dark). ThemeProvider với localStorage + FOUC prevention.
-- [ ] **Type Sync:** Đồng bộ TypeScript interfaces từ Backend.
+- [x] **Type Sync:** Đồng bộ TypeScript interfaces từ Backend — `src/types/index.ts`.
 
 Xem chi tiết tại [docs/FRONTEND_CHECKLIST.md](docs/FRONTEND_CHECKLIST.md).
 

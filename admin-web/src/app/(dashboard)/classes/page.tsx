@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 
 export default function ClassesPage() {
@@ -19,6 +19,27 @@ export default function ClassesPage() {
     }
   };
 
+  const [classList, setClassList] = useState(classes);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [form, setForm] = useState({ id: "", name: "", teacher: "", room: "", size: "" });
+
+  const handleAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+    setClassList([{
+      id: form.id,
+      name: form.name,
+      teacher: form.teacher,
+      initials: form.teacher.split(" ").slice-1?.join("")[0] ?? "GV",
+      initialsColor: "bg-primary-container/20 text-primary",
+      room: form.room,
+      size: form.size,
+      status: "Đang học",
+      statusType: "success"
+    }, ...classList]);
+    setShowAddModal(false);
+    setForm({ id: "", name: "", teacher: "", room: "", size: "" });
+  };
+
   return (
     <main className="flex-1 overflow-y-auto mt-16 p-xl bg-background">
       {/* Page Header */}
@@ -29,14 +50,14 @@ export default function ClassesPage() {
             Xem, tìm kiếm và tạo mới các lớp học trong hệ thống.
           </p>
         </div>
-        <button className="bg-primary hover:bg-surface-tint text-on-primary text-button px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors duration-200">
+        <button onClick={() => setShowAddModal(true)} className="bg-primary hover:bg-surface-tint text-on-primary text-button px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm transition-colors duration-200">
           <span className="material-symbols-outlined text-[20px]">add</span>
           Mở lớp mới
         </button>
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 mb-lg items-center">
+      <div className="flex flex-wrap gap-3 mb-lg items-center">
         <div className="relative flex-1 max-w-md">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
           <input
@@ -82,7 +103,7 @@ export default function ClassesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20 text-body-md text-on-surface">
-              {classes.map((cls, idx) => (
+              {classList.map((cls, idx) => (
                 <tr key={idx} className="hover:bg-surface-container-lowest/50 transition-colors">
                   <td className="py-4 px-4">
                     <Link href={`/classes/${cls.id}`} className="text-button text-primary hover:underline">{cls.id}</Link>
@@ -129,6 +150,45 @@ export default function ClassesPage() {
           </div>
         </div>
       </div>
+
+      {/* Add Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-surface-container-lowest rounded-xl shadow-[var(--shadow-float)] border border-border-muted p-xl w-full max-w-3xl">
+            <h3 className="text-h3 text-on-surface mb-md">Mở Lớp học phần mới</h3>
+            <form className="space-y-4" onSubmit={handleAdd}>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Mã Lớp</label>
+                  <input type="text" value={form.id} onChange={e => setForm({...form, id: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: CS101.A1" />
+                </div>
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Tên Môn học</label>
+                  <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: Nhập môn Lập trình" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Giảng viên phụ trách</label>
+                  <input type="text" value={form.teacher} onChange={e => setForm({...form, teacher: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: Nguyễn Văn A" />
+                </div>
+                <div>
+                  <label className="block text-label font-label text-on-surface-variant mb-1">Sĩ số dự kiến</label>
+                  <input type="text" value={form.size} onChange={e => setForm({...form, size: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: 0/50" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-label font-label text-on-surface-variant mb-1">Phòng học (mặc định)</label>
+                <input type="text" value={form.room} onChange={e => setForm({...form, room: e.target.value})} className="w-full bg-surface border border-outline-variant rounded-lg px-3 py-2 focus:border-primary outline-none" required placeholder="VD: Phòng 302, Tòa A" />
+              </div>
+              <div className="flex gap-3 justify-end pt-4 border-t border-outline-variant/30">
+                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-lg border border-outline-variant hover:bg-surface-container transition-colors text-button text-on-surface">Hủy</button>
+                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-on-primary hover:bg-primary/90 transition-colors text-button">Mở Lớp</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -109,8 +109,9 @@ export default function NewUserPage() {
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md text-on-surface appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors pr-10"
                         id="role"
                         required
+                        defaultValue=""
                       >
-                        <option disabled selected value="">-- Chọn vai trò --</option>
+                        <option disabled value="">-- Chọn vai trò --</option>
                         <option value="student">Sinh viên</option>
                         <option value="teacher">Giảng viên</option>
                         <option value="admin">Quản trị viên</option>
@@ -128,8 +129,9 @@ export default function NewUserPage() {
                       <select
                         className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2 text-body-md text-on-surface appearance-none focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors pr-10"
                         id="department"
+                        defaultValue=""
                       >
-                        <option disabled selected value="">-- Chọn khoa --</option>
+                        <option disabled value="">-- Chọn khoa --</option>
                         <option value="it">Công nghệ Thông tin</option>
                         <option value="business">Quản trị Kinh doanh</option>
                         <option value="design">Thiết kế Đồ họa</option>

@@ -24,9 +24,49 @@ UniVerse là một hệ sinh thái đại học số thông minh, giải quyết
 - `docker`: Docker configuration files.
 - `docs`: Detailed documentation and report outline.
 
-## Setup & Development
-(Detailed setup instructions will be updated as implementation progresses.)
+## Setup & Development / Cài đặt & Phát triển
 
-1. Clone the repository.
-2. Ensure you have Docker and Node.js (v20+) installed.
-3. Run `docker-compose up -d` to start the infrastructure.
+Hiện tại dự án đang ở giai đoạn hoàn thiện giao diện mẫu (UI Prototype). Bạn có thể chạy riêng biệt từng phân hệ Web Portal (Next.js) như sau:
+
+### 1. Cổng Quản Trị Hệ Thống (Admin Portal)
+- **Thư mục:** `/admin-web`
+- **Cổng chạy mặc định:** `3000` (hoặc tự động tăng lên `3001` nếu bị trùng)
+- **Lệnh thực hiện:**
+  ```bash
+  cd admin-web
+  npm install
+  npm run dev
+  ```
+  Truy cập: [http://localhost:3000](http://localhost:3000)
+
+### 2. Cổng Dành Cho Giảng Viên (Lecturer Portal)
+- **Thư mục:** `/lecturer-web`
+- **Cổng chạy mặc định:** `3000` (để tránh xung đột cổng với Admin Portal, bạn nên chạy trên cổng khác ví dụ `3011`)
+- **Lệnh thực hiện:**
+  ```bash
+  cd lecturer-web
+  npm install
+  # Chạy trên cổng 3011
+  npm run dev -- -p 3011
+  ```
+  Truy cập: [http://localhost:3011](http://localhost:3011)
+
+### 3. Cổng Dành Cho Sinh Viên (Student Portal)
+- **Thư mục:** `/student-web`
+- **Cổng chạy mặc định:** `3012` (đã được định hình sẵn trong `package.json`)
+- **Lệnh thực hiện:**
+  ```bash
+  cd student-web
+  npm install
+  npm run dev
+  ```
+  Truy cập: [http://localhost:3012](http://localhost:3012)
+
+---
+
+### Chạy bằng Docker (Khi tích hợp Backend)
+1. Hãy đảm bảo bạn đã cài đặt Docker và Node.js (v20+).
+2. Khởi chạy các dịch vụ cơ sở hạ tầng (PostgreSQL, MongoDB, Redis, Kafka) bằng lệnh:
+   ```bash
+   docker-compose up -d
+   ```
