@@ -173,13 +173,71 @@ function parseHtmlTableBlock(lines, start) {
   return { rows, next: i };
 }
 
+// Split cell text into [{type:'text'|'table', content}] segments.
+// Handles inline <table>…</table> embedded within markdown cell values.
+function splitCellContent(text) {
+  const segments = [];
+  const re = /(<table[\s\S]*?<\/table>)/gi;
+  let last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > last) segments.push({ type: 'text', content: text.slice(last, m.index) });
+    segments.push({ type: 'table', content: m[1] });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) segments.push({ type: 'text', content: text.slice(last) });
+  return segments.length ? segments : [{ type: 'text', content: text }];
+}
+
+// Convert a cell's raw text (may contain inline HTML tables) into
+// an array of Paragraph / Table children suitable for TableCell.children.
+function makeCellChildren(cellText) {
+  const segments = splitCellContent(cellText);
+  const children = [];
+
+  for (const seg of segments) {
+    if (seg.type === 'text') {
+      const raw = seg.content
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
+      for (const line of raw.split('\n')) {
+        const t = line.trim();
+        if (t) children.push(new Paragraph({ children: parseInline(t), spacing: { before: 60, after: 0 } }));
+      }
+    } else {
+      // Parse nested HTML table and recurse into makeTable
+      const rows = [];
+      const trRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+      let trM;
+      while ((trM = trRe.exec(seg.content)) !== null) {
+        const cells = [];
+        const cellRe = /<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi;
+        let cM;
+        while ((cM = cellRe.exec(trM[1])) !== null) {
+          cells.push(cM[1].replace(/<[^>]+>/g, '')
+            .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').trim());
+        }
+        if (cells.length) rows.push(cells);
+      }
+      if (rows.length) {
+        const nested = makeTable(rows);
+        if (nested) children.push(nested);
+      }
+    }
+  }
+
+  return children.length
+    ? children
+    : [new Paragraph({ children: [new TextRun({ text: '', font: FONT, size: BODY_SIZE })] })];
+}
+
 function makeTable(rows) {
   if (!rows.length) return null;
-  // Normalize column count
   const colCount = Math.max(...rows.map(r => r.length));
   const normalizedRows = rows.map(r => {
-    while (r.length < colCount) r.push('');
-    return r;
+    const copy = [...r];
+    while (copy.length < colCount) copy.push('');
+    return copy;
   });
 
   return new Table({
@@ -188,10 +246,7 @@ function makeTable(rows) {
       new TableRow({
         children: row.map(cell =>
           new TableCell({
-            children: [new Paragraph({
-              children: parseInline(cell),
-              spacing: { before: 60, after: 60 },
-            })],
+            children: makeCellChildren(cell.trim()),
             shading: ri === 0
               ? { type: ShadingType.CLEAR, color: 'auto', fill: 'D9D9D9' }
               : undefined,
