@@ -522,21 +522,26 @@ GradeEntryView --> Class
 
 ### Biểu đồ UC08: Tạo/tắt mã QR
 
-**Kịch bản phiên bản 2 – UC08 Tạo/tắt mã QR**
+Kịch bản chi tiết cho chức năng tạo/tắt mã QR (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Giảng viên chọn chức năng Điểm danh và truy cập giao diện `QRSessionView`.
-2. Giảng viên nhập từ khóa tìm kiếm lớp học phần và nhấn Tìm.
-3. Lớp `QRSessionView` gọi lớp `Class` để thực hiện tìm kiếm qua phương thức `searchClassSection`.
-4. Lớp `Class` trả về danh sách lớp học phần phù hợp.
-5. Lớp `QRSessionView` hiển thị danh sách lớp cho giảng viên.
-6. Giảng viên chọn lớp INT1340.01 và chọn buổi học, sau đó nhấn "Tạo mã QR".
-7. Lớp `QRSessionView` gọi lớp `Attendance` qua phương thức `generateQr`.
-8. Lớp `Attendance` tạo mã QR và trả kết quả về `QRSessionView`.
-9. Lớp `QRSessionView` hiển thị mã QR điểm danh cho giảng viên.
-10. Giảng viên nhấn "Tắt mã QR" sau khi kết thúc điểm danh.
-11. Lớp `QRSessionView` gọi lớp `Attendance` qua phương thức `deactivateQr`.
-12. Lớp `Attendance` đóng điểm danh, ghi vắng cho SV chưa điểm danh và trả kết quả.
-13. Lớp `QRSessionView` hiển thị thông báo đóng điểm danh và cập nhật danh sách.
+1. Giảng viên chọn chức năng Điểm danh trên giao diện `LecturerHomeView`.
+2. Lớp `LecturerHomeView` gọi lớp `QRSessionView`.
+3. Lớp `QRSessionView` hiển thị cho giảng viên.
+4. Giảng viên nhập từ khóa "INT1340" và click nút Tìm.
+5. Lớp `QRSessionView` gọi đến lớp `Class` để xử lý.
+6. Lớp `Class` gọi hàm `searchClassSection()`.
+7. Lớp `Class` trả kết quả về lớp `QRSessionView`.
+8. Lớp `QRSessionView` hiển thị danh sách lớp học phần cho giảng viên.
+9. Giảng viên chọn lớp INT1340.01 và chọn buổi học, sau đó click nút "Tạo mã QR".
+10. Lớp `QRSessionView` gọi đến lớp `Attendance` để xử lý.
+11. Lớp `Attendance` gọi hàm `generateQr()`.
+12. Lớp `Attendance` trả kết quả về lớp `QRSessionView`.
+13. Lớp `QRSessionView` hiển thị mã QR điểm danh cho giảng viên.
+14. Giảng viên click nút "Tắt mã QR" sau khi kết thúc điểm danh.
+15. Lớp `QRSessionView` gọi đến lớp `Attendance` để xử lý.
+16. Lớp `Attendance` gọi hàm `deactivateQr()`.
+17. Lớp `Attendance` trả kết quả về lớp `QRSessionView`.
+18. Lớp `QRSessionView` hiển thị thông báo đóng điểm danh thành công và cập nhật danh sách cho giảng viên.
 
 ```plantuml
 @startuml
@@ -561,31 +566,39 @@ sequenceDiagram {
 title UC08 – Tạo/tắt mã QR (Tuần tự Phân tích)
 
 actor "Giảng viên" as GV
+boundary LecturerHomeView
 boundary QRSessionView
 entity Class
 entity Attendance
 
-GV -> QRSessionView : 1: mở giao diện điểm danh
+GV -> LecturerHomeView : 1: chọn chức năng Điểm danh
+activate LecturerHomeView
+LecturerHomeView -> QRSessionView : 2: gọi QRSessionView
 activate QRSessionView
-GV -> QRSessionView : 2: nhập từ khóa + nhấn Tìm
-QRSessionView -> Class : 3: gọi searchClassSection()
+QRSessionView --> GV : 3: hiển thị giao diện
+GV -> QRSessionView : 4: nhập từ khóa + click Tìm
+QRSessionView -> Class : 5: gọi đến Class để xử lý
 activate Class
-Class --> QRSessionView : 4: trả về danh sách lớp
+Class -> Class : 6: searchClassSection()
+Class --> QRSessionView : 7: trả kết quả
 deactivate Class
-QRSessionView --> GV : 5: hiển thị danh sách lớp học phần
-GV -> QRSessionView : 6: chọn lớp INT1340.01, chọn buổi + nhấn "Tạo mã QR"
-QRSessionView -> Attendance : 7: gọi generateQr()
+QRSessionView --> GV : 8: hiển thị danh sách lớp học phần
+GV -> QRSessionView : 9: chọn lớp INT1340.01, chọn buổi + click "Tạo mã QR"
+QRSessionView -> Attendance : 10: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> QRSessionView : 8: trả về mã QR
+Attendance -> Attendance : 11: generateQr()
+Attendance --> QRSessionView : 12: trả kết quả
 deactivate Attendance
-QRSessionView --> GV : 9: hiển thị mã QR điểm danh
-GV -> QRSessionView : 10: nhấn "Tắt mã QR"
-QRSessionView -> Attendance : 11: gọi deactivateQr()
+QRSessionView --> GV : 13: hiển thị mã QR điểm danh
+GV -> QRSessionView : 14: click "Tắt mã QR"
+QRSessionView -> Attendance : 15: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> QRSessionView : 12: trả về kết quả + danh sách đã cập nhật
+Attendance -> Attendance : 16: deactivateQr()
+Attendance --> QRSessionView : 17: trả kết quả
 deactivate Attendance
-QRSessionView --> GV : 13: thông báo đóng điểm danh + hiển thị danh sách
+QRSessionView --> GV : 18: thông báo đóng điểm danh + cập nhật danh sách
 deactivate QRSessionView
+deactivate LecturerHomeView
 @enduml
 ```
 
@@ -593,19 +606,28 @@ deactivate QRSessionView
 
 ### Biểu đồ UC09: Quản lý điểm danh
 
-**Kịch bản phiên bản 2 – UC09 Quản lý điểm danh**
+Kịch bản chi tiết cho chức năng quản lý điểm danh (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Giảng viên chọn chức năng Quản lý điểm danh và truy cập giao diện `AttendanceManageView`.
-2. Lớp `AttendanceManageView` tự động tải danh sách lớp học phần của giảng viên.
-3. Giảng viên chọn lớp INT1340.01 và chọn buổi học cần xem.
-4. Lớp `AttendanceManageView` gọi lớp `Attendance` qua phương thức `viewAttendance`.
-5. Lớp `Attendance` trả về danh sách sinh viên kèm trạng thái điểm danh.
-6. Lớp `AttendanceManageView` hiển thị bảng điểm danh cho giảng viên.
-7. Giảng viên chọn sinh viên Phạm Thị Thiên Hà để chỉnh sửa trạng thái.
-8. Giảng viên chọn trạng thái "Có mặt", nhập lý do và nhấn "Lưu".
-9. Lớp `AttendanceManageView` gọi lớp `Attendance` qua phương thức `markManualAttendance`.
-10. Lớp `Attendance` cập nhật trạng thái và trả kết quả thành công.
-11. Lớp `AttendanceManageView` hiển thị thông báo "Cập nhật thành công" và cập nhật bảng.
+1. Giảng viên chọn chức năng Quản lý điểm danh trên giao diện `LecturerHomeView`.
+2. Lớp `LecturerHomeView` gọi lớp `AttendanceManageView`.
+3. Lớp `AttendanceManageView` hiển thị cho giảng viên.
+4. Giảng viên nhập từ khóa tìm kiếm lớp học phần và click nút Tìm.
+5. Lớp `AttendanceManageView` gọi đến lớp `Class` để xử lý.
+6. Lớp `Class` gọi hàm `searchClassSection()`.
+7. Lớp `Class` trả kết quả về lớp `AttendanceManageView`.
+8. Lớp `AttendanceManageView` hiển thị danh sách lớp học phần cho giảng viên.
+9. Giảng viên chọn lớp INT1340.01 và chọn buổi học cần xem.
+10. Lớp `AttendanceManageView` gọi đến lớp `Attendance` để xử lý.
+11. Lớp `Attendance` gọi hàm `viewAttendance()`.
+12. Lớp `Attendance` trả kết quả về lớp `AttendanceManageView`.
+13. Lớp `AttendanceManageView` hiển thị bảng điểm danh theo buổi học cho giảng viên.
+14. Giảng viên click vào dòng sinh viên Phạm Thị Thiên Hà muốn sửa.
+15. Lớp `AttendanceManageView` hiển thị modal chỉnh sửa trạng thái cho giảng viên.
+16. Giảng viên chọn trạng thái "Có mặt", nhập lý do và click nút Lưu.
+17. Lớp `AttendanceManageView` gọi đến lớp `Attendance` để xử lý.
+18. Lớp `Attendance` gọi hàm `markManualAttendance()`.
+19. Lớp `Attendance` trả kết quả về lớp `AttendanceManageView`.
+20. Lớp `AttendanceManageView` hiển thị thông báo cập nhật thành công và cập nhật bảng cho giảng viên.
 
 ```plantuml
 @startuml
@@ -630,24 +652,41 @@ sequenceDiagram {
 title UC09 – Quản lý điểm danh (Tuần tự Phân tích)
 
 actor "Giảng viên" as GV
+boundary LecturerHomeView
 boundary AttendanceManageView
+entity Class
 entity Attendance
 
-GV -> AttendanceManageView : 1: mở giao diện quản lý điểm danh
+GV -> LecturerHomeView : 1: chọn chức năng Quản lý điểm danh
+activate LecturerHomeView
+LecturerHomeView -> AttendanceManageView : 2: gọi AttendanceManageView
 activate AttendanceManageView
-GV -> AttendanceManageView : 2: chọn lớp INT1340.01, chọn buổi học
-AttendanceManageView -> Attendance : 3: gọi viewAttendance()
+AttendanceManageView --> GV : 3: hiển thị giao diện
+GV -> AttendanceManageView : 4: nhập từ khóa + click Tìm
+AttendanceManageView -> Class : 5: gọi đến Class để xử lý
+activate Class
+Class -> Class : 6: searchClassSection()
+Class --> AttendanceManageView : 7: trả kết quả
+deactivate Class
+AttendanceManageView --> GV : 8: hiển thị danh sách lớp học phần
+GV -> AttendanceManageView : 9: chọn lớp INT1340.01, chọn buổi học
+AttendanceManageView -> Attendance : 10: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> AttendanceManageView : 4: trả về danh sách điểm danh
+Attendance -> Attendance : 11: viewAttendance()
+Attendance --> AttendanceManageView : 12: trả kết quả
 deactivate Attendance
-AttendanceManageView --> GV : 5: hiển thị bảng điểm danh theo buổi
-GV -> AttendanceManageView : 6: chọn SV Phạm Thị Thiên Hà, chọn trạng thái mới + nhấn Lưu
-AttendanceManageView -> Attendance : 7: gọi markManualAttendance()
+AttendanceManageView --> GV : 13: hiển thị bảng điểm danh theo buổi học
+GV -> AttendanceManageView : 14: click dòng SV Phạm Thị Thiên Hà
+AttendanceManageView --> GV : 15: hiển thị modal chỉnh sửa trạng thái
+GV -> AttendanceManageView : 16: chọn trạng thái + nhập lý do + click Lưu
+AttendanceManageView -> Attendance : 17: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> AttendanceManageView : 8: trả về kết quả thành công
+Attendance -> Attendance : 18: markManualAttendance()
+Attendance --> AttendanceManageView : 19: trả kết quả
 deactivate Attendance
-AttendanceManageView --> GV : 9: thông báo "Cập nhật thành công" + cập nhật bảng
+AttendanceManageView --> GV : 20: thông báo cập nhật thành công + cập nhật bảng
 deactivate AttendanceManageView
+deactivate LecturerHomeView
 @enduml
 ```
 
@@ -655,16 +694,20 @@ deactivate AttendanceManageView
 
 ### Biểu đồ UC10: Xem điểm
 
-**Kịch bản phiên bản 2 – UC10 Xem điểm**
+Kịch bản chi tiết cho chức năng xem điểm (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Sinh viên chọn chức năng Xem điểm và truy cập giao diện `GradeView`.
-2. Lớp `GradeView` gọi lớp `Grade` qua phương thức `viewGrade`.
-3. Lớp `Grade` trả về danh sách lớp đã đăng ký kèm trạng thái điểm.
-4. Lớp `GradeView` hiển thị danh sách cho sinh viên.
-5. Sinh viên chọn học kỳ "2024-1" để xem chi tiết.
-6. Lớp `GradeView` gọi lớp `Grade` qua phương thức `viewGradeBySemester`.
-7. Lớp `Grade` trả về bảng chi tiết điểm theo kỳ học.
-8. Lớp `GradeView` hiển thị bảng chi tiết điểm cho sinh viên.
+1. Sinh viên chọn chức năng Xem điểm trên giao diện `StudentHomeView`.
+2. Lớp `StudentHomeView` gọi lớp `GradeView`.
+3. Lớp `GradeView` hiển thị cho sinh viên.
+4. Lớp `GradeView` gọi đến lớp `Grade` để xử lý.
+5. Lớp `Grade` gọi hàm `viewGrade()`.
+6. Lớp `Grade` trả kết quả về lớp `GradeView`.
+7. Lớp `GradeView` hiển thị danh sách lớp đã đăng ký kèm điểm tổng kết cho sinh viên.
+8. Sinh viên chọn học kỳ "2024-1" để xem chi tiết.
+9. Lớp `GradeView` gọi đến lớp `Grade` để xử lý.
+10. Lớp `Grade` gọi hàm `viewGradeBySemester()`.
+11. Lớp `Grade` trả kết quả về lớp `GradeView`.
+12. Lớp `GradeView` hiển thị bảng chi tiết điểm theo kỳ học cho sinh viên.
 
 ```plantuml
 @startuml
@@ -689,23 +732,30 @@ sequenceDiagram {
 title UC10 – Xem điểm (Tuần tự Phân tích)
 
 actor "Sinh viên" as SV
+boundary StudentHomeView
 boundary GradeView
 entity Grade
 
-SV -> GradeView : 1: mở giao diện xem điểm
+SV -> StudentHomeView : 1: chọn chức năng Xem điểm
+activate StudentHomeView
+StudentHomeView -> GradeView : 2: gọi GradeView
 activate GradeView
-GradeView -> Grade : 2: gọi viewGrade()
+GradeView --> SV : 3: hiển thị giao diện
+GradeView -> Grade : 4: gọi đến Grade để xử lý
 activate Grade
-Grade --> GradeView : 3: trả về danh sách lớp + trạng thái điểm
+Grade -> Grade : 5: viewGrade()
+Grade --> GradeView : 6: trả kết quả
 deactivate Grade
-GradeView --> SV : 4: hiển thị danh sách lớp đã đăng ký
-SV -> GradeView : 5: chọn học kỳ "2024-1"
-GradeView -> Grade : 6: gọi viewGradeBySemester()
+GradeView --> SV : 7: hiển thị danh sách lớp kèm điểm tổng kết
+SV -> GradeView : 8: chọn học kỳ "2024-1"
+GradeView -> Grade : 9: gọi đến Grade để xử lý
 activate Grade
-Grade --> GradeView : 7: trả về bảng chi tiết điểm theo kỳ
+Grade -> Grade : 10: viewGradeBySemester()
+Grade --> GradeView : 11: trả kết quả
 deactivate Grade
-GradeView --> SV : 8: hiển thị bảng chi tiết điểm
+GradeView --> SV : 12: hiển thị bảng chi tiết điểm theo kỳ học
 deactivate GradeView
+deactivate StudentHomeView
 @enduml
 ```
 
@@ -713,20 +763,23 @@ deactivate GradeView
 
 ### Biểu đồ UC11: Nhập/sửa điểm
 
-**Kịch bản phiên bản 2 – UC11 Nhập/sửa điểm**
+Kịch bản chi tiết cho chức năng nhập/sửa điểm (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Giảng viên chọn chức năng Nhập điểm và truy cập giao diện `GradeEntryView`.
-2. Giảng viên nhập từ khóa tìm kiếm lớp học phần và nhấn Tìm.
-3. Lớp `GradeEntryView` gọi lớp `Class` qua phương thức `searchClassSection`.
-4. Lớp `Class` trả về danh sách lớp học phần phù hợp.
-5. Lớp `GradeEntryView` hiển thị danh sách lớp cho giảng viên.
-6. Giảng viên chọn lớp INT1340.01.
-7. Lớp `GradeEntryView` hiển thị bảng sinh viên với các ô nhập điểm.
-8. Giảng viên nhập điểm cuối kỳ cho từng sinh viên.
-9. Giảng viên nhấn "Xác nhận nộp điểm".
-10. Lớp `GradeEntryView` gọi lớp `Grade` qua phương thức `enterGrade`.
-11. Lớp `Grade` lưu điểm và trả kết quả thành công.
-12. Lớp `GradeEntryView` hiển thị thông báo "Nộp điểm thành công".
+1. Giảng viên chọn chức năng Nhập điểm trên giao diện `LecturerHomeView`.
+2. Lớp `LecturerHomeView` gọi lớp `GradeEntryView`.
+3. Lớp `GradeEntryView` hiển thị cho giảng viên.
+4. Giảng viên nhập từ khóa tìm kiếm lớp học phần và click nút Tìm.
+5. Lớp `GradeEntryView` gọi đến lớp `Class` để xử lý.
+6. Lớp `Class` gọi hàm `searchClassSection()`.
+7. Lớp `Class` trả kết quả về lớp `GradeEntryView`.
+8. Lớp `GradeEntryView` hiển thị danh sách lớp học phần cho giảng viên.
+9. Giảng viên chọn lớp INT1340.01.
+10. Lớp `GradeEntryView` hiển thị bảng sinh viên với các ô nhập điểm cho giảng viên.
+11. Giảng viên nhập điểm cho từng sinh viên và click nút "Xác nhận nộp điểm".
+12. Lớp `GradeEntryView` gọi đến lớp `Grade` để xử lý.
+13. Lớp `Grade` gọi hàm `enterGrade()`.
+14. Lớp `Grade` trả kết quả về lớp `GradeEntryView`.
+15. Lớp `GradeEntryView` hiển thị thông báo nộp điểm thành công cho giảng viên.
 
 ```plantuml
 @startuml
@@ -751,28 +804,34 @@ sequenceDiagram {
 title UC11 – Nhập/sửa điểm (Tuần tự Phân tích)
 
 actor "Giảng viên" as GV
+boundary LecturerHomeView
 boundary GradeEntryView
 entity Class
 entity Grade
 
-GV -> GradeEntryView : 1: mở giao diện nhập điểm
+GV -> LecturerHomeView : 1: chọn chức năng Nhập điểm
+activate LecturerHomeView
+LecturerHomeView -> GradeEntryView : 2: gọi GradeEntryView
 activate GradeEntryView
-GV -> GradeEntryView : 2: nhập từ khóa + nhấn Tìm
-GradeEntryView -> Class : 3: gọi searchClassSection()
+GradeEntryView --> GV : 3: hiển thị giao diện
+GV -> GradeEntryView : 4: nhập từ khóa + click Tìm
+GradeEntryView -> Class : 5: gọi đến Class để xử lý
 activate Class
-Class --> GradeEntryView : 4: trả về danh sách lớp
+Class -> Class : 6: searchClassSection()
+Class --> GradeEntryView : 7: trả kết quả
 deactivate Class
-GradeEntryView --> GV : 5: hiển thị danh sách lớp học phần
-GV -> GradeEntryView : 6: chọn lớp INT1340.01
-GradeEntryView --> GV : 7: hiển thị bảng SV với ô nhập điểm
-GV -> GradeEntryView : 8: nhập điểm cuối kỳ cho từng SV
-GV -> GradeEntryView : 9: nhấn "Xác nhận nộp điểm"
-GradeEntryView -> Grade : 10: gọi enterGrade()
+GradeEntryView --> GV : 8: hiển thị danh sách lớp học phần
+GV -> GradeEntryView : 9: chọn lớp INT1340.01
+GradeEntryView --> GV : 10: hiển thị bảng SV với ô nhập điểm
+GV -> GradeEntryView : 11: nhập điểm + click "Xác nhận nộp điểm"
+GradeEntryView -> Grade : 12: gọi đến Grade để xử lý
 activate Grade
-Grade --> GradeEntryView : 11: trả về kết quả thành công
+Grade -> Grade : 13: enterGrade()
+Grade --> GradeEntryView : 14: trả kết quả
 deactivate Grade
-GradeEntryView --> GV : 12: thông báo "Nộp điểm thành công"
+GradeEntryView --> GV : 15: thông báo nộp điểm thành công
 deactivate GradeEntryView
+deactivate LecturerHomeView
 @enduml
 ```
 
@@ -1257,21 +1316,33 @@ Class "1" --> "*" Schedule
 
 ### Biểu đồ UC08: Tạo/tắt mã QR
 
-**Kịch bản phiên bản 3 – UC08 Tạo/tắt mã QR**
+Kịch bản chi tiết cho chức năng tạo/tắt mã QR (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Giảng viên truy cập giao diện `QRSessionPage`, phương thức `formLoad()` được gọi tự động.
-2. Giảng viên nhập từ khóa "INT1340" và nhấn Tìm; `QRSessionPage` gọi `btnSearchClassClick()`.
-3. Phương thức `btnSearchClassClick()` gọi `ClassController.searchClassSection(keyword: String)`.
-4. `ClassController` gọi `Class` để truy vấn và trả về `List<Class>`.
-5. `QRSessionPage` gọi `displayAttendanceList()` để hiển thị danh sách lớp.
-6. Giảng viên chọn lớp INT1340.01, chọn buổi học và nhấn "Tạo mã QR"; `QRSessionPage` gọi `btnGenerateQrClick()`.
-7. Phương thức `btnGenerateQrClick()` gọi `AttendanceController.generateQr(schedule: Schedule)`.
-8. `AttendanceController` gọi `Attendance` để tạo mã QR và trả về đối tượng `Attendance`.
-9. `QRSessionPage` nhận kết quả và hiển thị mã QR trên giao diện.
-10. Giảng viên nhấn "Tắt mã QR"; `QRSessionPage` gọi `btnDeactivateQrClick()`.
-11. Phương thức `btnDeactivateQrClick()` gọi `AttendanceController.deactivateQr(schedule: Schedule)`.
-12. `AttendanceController` gọi `Attendance` để đóng điểm danh, trả về `boolean`.
-13. `QRSessionPage` gọi `showMessage("Đã đóng điểm danh")` và cập nhật bảng.
+1. Giảng viên chọn chức năng Điểm danh trên giao diện `LecturerHomePage`.
+2. Lớp `LecturerHomePage` gọi lớp `QRSessionPage`.
+3. Lớp `QRSessionPage` gọi phương thức `formLoad()` để khởi tạo giao diện.
+4. Lớp `QRSessionPage` hiển thị cho giảng viên.
+5. Giảng viên nhập từ khóa "INT1340" và click nút Tìm; lớp `QRSessionPage` gọi `btnSearchClassClick()`.
+6. Lớp `QRSessionPage` gọi đến lớp `ClassController` để xử lý.
+7. Lớp `ClassController` gọi đến lớp `Class` để xử lý.
+8. Lớp `Class` gọi hàm `searchClassSection(keyword : String) : List<Class>`.
+9. Lớp `Class` trả kết quả `List<Class>` về lớp `ClassController`.
+10. Lớp `ClassController` trả kết quả `List<Class>` về lớp `QRSessionPage`.
+11. Lớp `QRSessionPage` hiển thị danh sách lớp học phần cho giảng viên.
+12. Giảng viên chọn lớp INT1340.01 và click nút "Tạo mã QR"; lớp `QRSessionPage` gọi `btnGenerateQrClick()`.
+13. Lớp `QRSessionPage` gọi đến lớp `AttendanceController` để xử lý.
+14. Lớp `AttendanceController` gọi đến lớp `Attendance` để xử lý.
+15. Lớp `Attendance` gọi hàm `generateQr(schedule : Schedule) : Attendance`.
+16. Lớp `Attendance` trả kết quả `Attendance` về lớp `AttendanceController`.
+17. Lớp `AttendanceController` trả kết quả `Attendance` về lớp `QRSessionPage`.
+18. Lớp `QRSessionPage` hiển thị mã QR điểm danh cho giảng viên.
+19. Giảng viên click nút "Tắt mã QR"; lớp `QRSessionPage` gọi `btnDeactivateQrClick()`.
+20. Lớp `QRSessionPage` gọi đến lớp `AttendanceController` để xử lý.
+21. Lớp `AttendanceController` gọi đến lớp `Attendance` để xử lý.
+22. Lớp `Attendance` gọi hàm `deactivateQr(schedule : Schedule) : boolean`.
+23. Lớp `Attendance` trả kết quả `boolean` về lớp `AttendanceController`.
+24. Lớp `AttendanceController` trả kết quả `boolean` về lớp `QRSessionPage`.
+25. Lớp `QRSessionPage` hiển thị thông báo đóng điểm danh thành công và cập nhật bảng điểm danh cho giảng viên.
 
 ```plantuml
 @startuml
@@ -1297,45 +1368,54 @@ sequenceDiagram {
 title UC08 – Tạo/tắt mã QR (Tuần tự Thiết kế)
 
 actor "Giảng viên" as GV
+boundary LecturerHomePage
 boundary QRSessionPage
 control ClassController
 control AttendanceController
 entity Class
 entity Attendance
 
-GV -> QRSessionPage : 1: formLoad()
+GV -> LecturerHomePage : 1: chọn chức năng Điểm danh
+activate LecturerHomePage
+LecturerHomePage -> QRSessionPage : 2: gọi QRSessionPage
 activate QRSessionPage
-GV -> QRSessionPage : 2: btnSearchClassClick()
-QRSessionPage -> ClassController : 3: searchClassSection(keyword : String)
+QRSessionPage -> QRSessionPage : 3: formLoad()
+QRSessionPage --> GV : 4: hiển thị giao diện
+GV -> QRSessionPage : 5: btnSearchClassClick()
+QRSessionPage -> ClassController : 6: gọi đến ClassController để xử lý
 activate ClassController
-ClassController -> Class : 4: searchClassSection(keyword : String) : List<Class>
+ClassController -> Class : 7: gọi đến Class để xử lý
 activate Class
-Class --> ClassController : 5: List<Class>
+Class -> Class : 8: searchClassSection(keyword : String)
+Class --> ClassController : 9: List<Class>
 deactivate Class
-ClassController --> QRSessionPage : 6: List<Class>
+ClassController --> QRSessionPage : 10: List<Class>
 deactivate ClassController
-QRSessionPage --> GV : 7: displayAttendanceList(classes)
-GV -> QRSessionPage : 8: btnGenerateQrClick()
-QRSessionPage -> AttendanceController : 9: generateQr(schedule : Schedule)
+QRSessionPage --> GV : 11: hiển thị danh sách lớp học phần
+GV -> QRSessionPage : 12: btnGenerateQrClick()
+QRSessionPage -> AttendanceController : 13: gọi đến AttendanceController để xử lý
 activate AttendanceController
-AttendanceController -> Attendance : 10: generateQr(schedule : Schedule) : Attendance
+AttendanceController -> Attendance : 14: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> AttendanceController : 11: Attendance
+Attendance -> Attendance : 15: generateQr(schedule : Schedule)
+Attendance --> AttendanceController : 16: Attendance
 deactivate Attendance
-AttendanceController --> QRSessionPage : 12: Attendance
+AttendanceController --> QRSessionPage : 17: Attendance
 deactivate AttendanceController
-QRSessionPage --> GV : 13: hiển thị mã QR
-GV -> QRSessionPage : 14: btnDeactivateQrClick()
-QRSessionPage -> AttendanceController : 15: deactivateQr(schedule : Schedule)
+QRSessionPage --> GV : 18: hiển thị mã QR điểm danh
+GV -> QRSessionPage : 19: btnDeactivateQrClick()
+QRSessionPage -> AttendanceController : 20: gọi đến AttendanceController để xử lý
 activate AttendanceController
-AttendanceController -> Attendance : 16: deactivateQr(schedule : Schedule) : boolean
+AttendanceController -> Attendance : 21: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> AttendanceController : 17: true
+Attendance -> Attendance : 22: deactivateQr(schedule : Schedule)
+Attendance --> AttendanceController : 23: boolean
 deactivate Attendance
-AttendanceController --> QRSessionPage : 18: true
+AttendanceController --> QRSessionPage : 24: boolean
 deactivate AttendanceController
-QRSessionPage --> GV : 19: showMessage("Đã đóng điểm danh") + cập nhật bảng
+QRSessionPage --> GV : 25: thông báo đóng điểm danh + cập nhật bảng
 deactivate QRSessionPage
+deactivate LecturerHomePage
 @enduml
 ```
 
@@ -1343,17 +1423,26 @@ deactivate QRSessionPage
 
 ### Biểu đồ UC09: Quản lý điểm danh
 
-**Kịch bản phiên bản 3 – UC09 Quản lý điểm danh**
+Kịch bản chi tiết cho chức năng quản lý điểm danh (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Giảng viên truy cập `AttendanceManagePage`, `formLoad()` tự động gọi `AttendanceController.viewAttendance(schedule: Schedule)`.
-2. `AttendanceController` gọi `Attendance` truy vấn và trả về `List<Attendance>`.
-3. `AttendanceManagePage` gọi `displayAttendance(list: List<Attendance>)` để hiển thị bảng.
-4. Giảng viên click dòng SV Phạm Thị Thiên Hà; `AttendanceManagePage` gọi `tblAttendanceClick(id: int)`.
-5. Giao diện hiển thị modal chỉnh sửa với trạng thái hiện tại.
-6. Giảng viên chọn trạng thái "Có mặt", nhập lý do và nhấn Lưu; `btnSaveManualClick()` được kích hoạt.
-7. `AttendanceManagePage` gọi `AttendanceController.markManualAttendance(attendance: Attendance)`.
-8. `AttendanceController` gọi `Attendance` cập nhật và trả về `boolean`.
-9. `AttendanceManagePage` gọi `showMessage("Cập nhật thành công")` và refresh bảng.
+1. Giảng viên chọn chức năng Quản lý điểm danh trên giao diện `LecturerHomePage`.
+2. Lớp `LecturerHomePage` gọi lớp `AttendanceManagePage`.
+3. Lớp `AttendanceManagePage` gọi phương thức `formLoad()` để khởi tạo giao diện.
+4. Lớp `AttendanceManagePage` gọi đến lớp `AttendanceController` để xử lý.
+5. Lớp `AttendanceController` gọi đến lớp `Attendance` để xử lý.
+6. Lớp `Attendance` gọi hàm `viewAttendance(schedule : Schedule) : List<Attendance>`.
+7. Lớp `Attendance` trả kết quả `List<Attendance>` về lớp `AttendanceController`.
+8. Lớp `AttendanceController` trả kết quả `List<Attendance>` về lớp `AttendanceManagePage`.
+9. Lớp `AttendanceManagePage` hiển thị bảng điểm danh theo buổi học cho giảng viên.
+10. Giảng viên click vào dòng sinh viên Phạm Thị Thiên Hà; lớp `AttendanceManagePage` gọi `tblAttendanceClick(id : int)`.
+11. Lớp `AttendanceManagePage` hiển thị modal chỉnh sửa trạng thái cho giảng viên.
+12. Giảng viên chọn trạng thái "Có mặt", nhập lý do và click nút Lưu; lớp `AttendanceManagePage` gọi `btnSaveManualClick()`.
+13. Lớp `AttendanceManagePage` gọi đến lớp `AttendanceController` để xử lý.
+14. Lớp `AttendanceController` gọi đến lớp `Attendance` để xử lý.
+15. Lớp `Attendance` gọi hàm `markManualAttendance(attendance : Attendance) : boolean`.
+16. Lớp `Attendance` trả kết quả `boolean` về lớp `AttendanceController`.
+17. Lớp `AttendanceController` trả kết quả `boolean` về lớp `AttendanceManagePage`.
+18. Lớp `AttendanceManagePage` hiển thị thông báo cập nhật thành công và cập nhật bảng cho giảng viên.
 
 ```plantuml
 @startuml
@@ -1379,34 +1468,41 @@ sequenceDiagram {
 title UC09 – Quản lý điểm danh (Tuần tự Thiết kế)
 
 actor "Giảng viên" as GV
+boundary LecturerHomePage
 boundary AttendanceManagePage
 control AttendanceController
 entity Attendance
 
-GV -> AttendanceManagePage : 1: formLoad()
+GV -> LecturerHomePage : 1: chọn chức năng Quản lý điểm danh
+activate LecturerHomePage
+LecturerHomePage -> AttendanceManagePage : 2: gọi AttendanceManagePage
 activate AttendanceManagePage
-AttendanceManagePage -> AttendanceController : 2: viewAttendance(schedule : Schedule)
+AttendanceManagePage -> AttendanceManagePage : 3: formLoad()
+AttendanceManagePage -> AttendanceController : 4: gọi đến AttendanceController để xử lý
 activate AttendanceController
-AttendanceController -> Attendance : 3: viewAttendance(schedule : Schedule) : List<Attendance>
+AttendanceController -> Attendance : 5: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> AttendanceController : 4: List<Attendance>
+Attendance -> Attendance : 6: viewAttendance(schedule : Schedule)
+Attendance --> AttendanceController : 7: List<Attendance>
 deactivate Attendance
-AttendanceController --> AttendanceManagePage : 5: List<Attendance>
+AttendanceController --> AttendanceManagePage : 8: List<Attendance>
 deactivate AttendanceController
-AttendanceManagePage --> GV : 6: displayAttendance(list)
-GV -> AttendanceManagePage : 7: tblAttendanceClick(id : int)
-AttendanceManagePage --> GV : 8: hiển thị modal chỉnh sửa
-GV -> AttendanceManagePage : 9: btnSaveManualClick()
-AttendanceManagePage -> AttendanceController : 10: markManualAttendance(attendance : Attendance)
+AttendanceManagePage --> GV : 9: hiển thị bảng điểm danh theo buổi học
+GV -> AttendanceManagePage : 10: tblAttendanceClick(id : int)
+AttendanceManagePage --> GV : 11: hiển thị modal chỉnh sửa trạng thái
+GV -> AttendanceManagePage : 12: btnSaveManualClick()
+AttendanceManagePage -> AttendanceController : 13: gọi đến AttendanceController để xử lý
 activate AttendanceController
-AttendanceController -> Attendance : 11: markManualAttendance(attendance : Attendance) : boolean
+AttendanceController -> Attendance : 14: gọi đến Attendance để xử lý
 activate Attendance
-Attendance --> AttendanceController : 12: true
+Attendance -> Attendance : 15: markManualAttendance(attendance : Attendance)
+Attendance --> AttendanceController : 16: boolean
 deactivate Attendance
-AttendanceController --> AttendanceManagePage : 13: true
+AttendanceController --> AttendanceManagePage : 17: boolean
 deactivate AttendanceController
-AttendanceManagePage --> GV : 14: showMessage("Cập nhật thành công") + refresh
+AttendanceManagePage --> GV : 18: thông báo cập nhật thành công + cập nhật bảng
 deactivate AttendanceManagePage
+deactivate LecturerHomePage
 @enduml
 ```
 
@@ -1414,15 +1510,24 @@ deactivate AttendanceManagePage
 
 ### Biểu đồ UC10: Xem điểm
 
-**Kịch bản phiên bản 3 – UC10 Xem điểm**
+Kịch bản chi tiết cho chức năng xem điểm (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Sinh viên truy cập `GradePage`, `formLoad()` tự động gọi `GradeController.viewGrade(student: User)`.
-2. `GradeController` gọi `Grade` truy vấn và trả về `List<Grade>`.
-3. `GradePage` gọi `displayCourseList(classes: List<Class>)` để hiển thị danh sách môn.
-4. Sinh viên click lớp INT1340.01; `GradePage` gọi `tblCourseListClick(classId: int)`.
-5. `GradePage` gọi `GradeController.viewGradeBySemester(student: User, semester: String)`.
-6. `GradeController` gọi `Grade` truy vấn chi tiết và trả về `List<Grade>`.
-7. `GradePage` gọi `displayGradeDetail(grades: List<Grade>)` để hiển thị bảng chi tiết.
+1. Sinh viên chọn chức năng Xem điểm trên giao diện `StudentHomePage`.
+2. Lớp `StudentHomePage` gọi lớp `GradePage`.
+3. Lớp `GradePage` gọi phương thức `formLoad()` để khởi tạo giao diện.
+4. Lớp `GradePage` gọi đến lớp `GradeController` để xử lý.
+5. Lớp `GradeController` gọi đến lớp `Grade` để xử lý.
+6. Lớp `Grade` gọi hàm `viewGrade(student : User) : List<Grade>`.
+7. Lớp `Grade` trả kết quả `List<Grade>` về lớp `GradeController`.
+8. Lớp `GradeController` trả kết quả `List<Grade>` về lớp `GradePage`.
+9. Lớp `GradePage` hiển thị danh sách lớp đã đăng ký kèm điểm tổng kết cho sinh viên.
+10. Sinh viên click vào lớp INT1340.01; lớp `GradePage` gọi `tblCourseListClick(classId : int)`.
+11. Lớp `GradePage` gọi đến lớp `GradeController` để xử lý.
+12. Lớp `GradeController` gọi đến lớp `Grade` để xử lý.
+13. Lớp `Grade` gọi hàm `viewGradeBySemester(student : User, semester : String) : List<Grade>`.
+14. Lớp `Grade` trả kết quả `List<Grade>` về lớp `GradeController`.
+15. Lớp `GradeController` trả kết quả `List<Grade>` về lớp `GradePage`.
+16. Lớp `GradePage` hiển thị bảng chi tiết điểm theo kỳ học cho sinh viên.
 
 ```plantuml
 @startuml
@@ -1448,32 +1553,39 @@ sequenceDiagram {
 title UC10 – Xem điểm (Tuần tự Thiết kế)
 
 actor "Sinh viên" as SV
+boundary StudentHomePage
 boundary GradePage
 control GradeController
 entity Grade
 
-SV -> GradePage : 1: formLoad()
+SV -> StudentHomePage : 1: chọn chức năng Xem điểm
+activate StudentHomePage
+StudentHomePage -> GradePage : 2: gọi GradePage
 activate GradePage
-GradePage -> GradeController : 2: viewGrade(student : User)
+GradePage -> GradePage : 3: formLoad()
+GradePage -> GradeController : 4: gọi đến GradeController để xử lý
 activate GradeController
-GradeController -> Grade : 3: viewGrade(student : User) : List<Grade>
+GradeController -> Grade : 5: gọi đến Grade để xử lý
 activate Grade
-Grade --> GradeController : 4: List<Grade>
+Grade -> Grade : 6: viewGrade(student : User)
+Grade --> GradeController : 7: List<Grade>
 deactivate Grade
-GradeController --> GradePage : 5: List<Grade>
+GradeController --> GradePage : 8: List<Grade>
 deactivate GradeController
-GradePage --> SV : 6: displayCourseList(classes)
-SV -> GradePage : 7: tblCourseListClick(classId : int)
-GradePage -> GradeController : 8: viewGradeBySemester(student : User, semester : String)
+GradePage --> SV : 9: hiển thị danh sách lớp kèm điểm tổng kết
+SV -> GradePage : 10: tblCourseListClick(classId : int)
+GradePage -> GradeController : 11: gọi đến GradeController để xử lý
 activate GradeController
-GradeController -> Grade : 9: viewGradeBySemester(student : User, semester : String) : List<Grade>
+GradeController -> Grade : 12: gọi đến Grade để xử lý
 activate Grade
-Grade --> GradeController : 10: List<Grade>
+Grade -> Grade : 13: viewGradeBySemester(student : User, semester : String)
+Grade --> GradeController : 14: List<Grade>
 deactivate Grade
-GradeController --> GradePage : 11: List<Grade>
+GradeController --> GradePage : 15: List<Grade>
 deactivate GradeController
-GradePage --> SV : 12: displayGradeDetail(grades)
+GradePage --> SV : 16: hiển thị bảng chi tiết điểm theo kỳ học
 deactivate GradePage
+deactivate StudentHomePage
 @enduml
 ```
 
@@ -1481,19 +1593,27 @@ deactivate GradePage
 
 ### Biểu đồ UC11: Nhập/sửa điểm
 
-**Kịch bản phiên bản 3 – UC11 Nhập/sửa điểm**
+Kịch bản chi tiết cho chức năng nhập/sửa điểm (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
 
-1. Giảng viên truy cập `GradeEntryPage`, `formLoad()` khởi tạo giao diện.
-2. Giảng viên nhập từ khóa và nhấn Tìm; `GradeEntryPage` gọi `btnSearchClassClick()`.
-3. `btnSearchClassClick()` gọi `ClassController.searchClassSection(keyword: String)`.
-4. `ClassController` gọi `Class` truy vấn, trả về `List<Class>`.
-5. `GradeEntryPage` gọi `displayGrades()` để hiển thị danh sách lớp.
-6. Giảng viên chọn lớp INT1340.01; giao diện hiển thị bảng SV với ô nhập điểm.
-7. Giảng viên nhập điểm cuối kỳ cho từng SV.
-8. Giảng viên nhấn "Xác nhận nộp điểm"; `GradeEntryPage` gọi `btnSubmitGradesClick()`.
-9. `btnSubmitGradesClick()` gọi `GradeController.enterGrade(grades: List<Grade>)`.
-10. `GradeController` gọi `Grade` để lưu và trả về `boolean`.
-11. `GradeEntryPage` gọi `showMessage("Nộp điểm thành công")`.
+1. Giảng viên chọn chức năng Nhập điểm trên giao diện `LecturerHomePage`.
+2. Lớp `LecturerHomePage` gọi lớp `GradeEntryPage`.
+3. Lớp `GradeEntryPage` gọi phương thức `formLoad()` để khởi tạo giao diện.
+4. Lớp `GradeEntryPage` hiển thị cho giảng viên.
+5. Giảng viên nhập từ khóa và click nút Tìm; lớp `GradeEntryPage` gọi `btnSearchClassClick()`.
+6. Lớp `GradeEntryPage` gọi đến lớp `ClassController` để xử lý.
+7. Lớp `ClassController` gọi đến lớp `Class` để xử lý.
+8. Lớp `Class` gọi hàm `searchClassSection(keyword : String) : List<Class>`.
+9. Lớp `Class` trả kết quả `List<Class>` về lớp `ClassController`.
+10. Lớp `ClassController` trả kết quả `List<Class>` về lớp `GradeEntryPage`.
+11. Lớp `GradeEntryPage` hiển thị danh sách lớp học phần cho giảng viên.
+12. Giảng viên chọn lớp INT1340.01; lớp `GradeEntryPage` hiển thị bảng sinh viên với các ô nhập điểm.
+13. Giảng viên nhập điểm cho từng sinh viên và click nút "Xác nhận nộp điểm"; lớp `GradeEntryPage` gọi `btnSubmitGradesClick()`.
+14. Lớp `GradeEntryPage` gọi đến lớp `GradeController` để xử lý.
+15. Lớp `GradeController` gọi đến lớp `Grade` để xử lý.
+16. Lớp `Grade` gọi hàm `enterGrade(grades : List<Grade>) : boolean`.
+17. Lớp `Grade` trả kết quả `boolean` về lớp `GradeController`.
+18. Lớp `GradeController` trả kết quả `boolean` về lớp `GradeEntryPage`.
+19. Lớp `GradeEntryPage` hiển thị thông báo nộp điểm thành công cho giảng viên.
 
 ```plantuml
 @startuml
@@ -1519,36 +1639,45 @@ sequenceDiagram {
 title UC11 – Nhập/sửa điểm (Tuần tự Thiết kế)
 
 actor "Giảng viên" as GV
+boundary LecturerHomePage
 boundary GradeEntryPage
 control ClassController
 control GradeController
 entity Class
 entity Grade
 
-GV -> GradeEntryPage : 1: formLoad()
+GV -> LecturerHomePage : 1: chọn chức năng Nhập điểm
+activate LecturerHomePage
+LecturerHomePage -> GradeEntryPage : 2: gọi GradeEntryPage
 activate GradeEntryPage
-GV -> GradeEntryPage : 2: btnSearchClassClick()
-GradeEntryPage -> ClassController : 3: searchClassSection(keyword : String)
+GradeEntryPage -> GradeEntryPage : 3: formLoad()
+GradeEntryPage --> GV : 4: hiển thị giao diện
+GV -> GradeEntryPage : 5: btnSearchClassClick()
+GradeEntryPage -> ClassController : 6: gọi đến ClassController để xử lý
 activate ClassController
-ClassController -> Class : 4: searchClassSection(keyword : String) : List<Class>
+ClassController -> Class : 7: gọi đến Class để xử lý
 activate Class
-Class --> ClassController : 5: List<Class>
+Class -> Class : 8: searchClassSection(keyword : String)
+Class --> ClassController : 9: List<Class>
 deactivate Class
-ClassController --> GradeEntryPage : 6: List<Class>
+ClassController --> GradeEntryPage : 10: List<Class>
 deactivate ClassController
-GradeEntryPage --> GV : 7: displayGrades(classes)
-GV -> GradeEntryPage : 8: nhập điểm cho từng SV
-GV -> GradeEntryPage : 9: btnSubmitGradesClick()
-GradeEntryPage -> GradeController : 10: enterGrade(grades : List<Grade>)
+GradeEntryPage --> GV : 11: hiển thị danh sách lớp học phần
+GV -> GradeEntryPage : 12: chọn lớp INT1340.01
+GradeEntryPage --> GV : 13: hiển thị bảng SV với ô nhập điểm
+GV -> GradeEntryPage : 14: btnSubmitGradesClick()
+GradeEntryPage -> GradeController : 15: gọi đến GradeController để xử lý
 activate GradeController
-GradeController -> Grade : 11: enterGrade(grades : List<Grade>) : boolean
+GradeController -> Grade : 16: gọi đến Grade để xử lý
 activate Grade
-Grade --> GradeController : 12: true
+Grade -> Grade : 17: enterGrade(grades : List<Grade>)
+Grade --> GradeController : 18: boolean
 deactivate Grade
-GradeController --> GradeEntryPage : 13: true
+GradeController --> GradeEntryPage : 19: boolean
 deactivate GradeController
-GradeEntryPage --> GV : 14: showMessage("Nộp điểm thành công")
+GradeEntryPage --> GV : 20: thông báo nộp điểm thành công
 deactivate GradeEntryPage
+deactivate LecturerHomePage
 @enduml
 ```
 
