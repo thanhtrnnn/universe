@@ -520,9 +520,9 @@ GradeEntryView --> Class
 
 ## II.4. Biểu đồ tuần tự phân tích – Module 3
 
-### Biểu đồ UC08: Tạo/tắt mã QR
+### UC08: Tạo/tắt mã QR (18 bước)
 
-Kịch bản chi tiết cho chức năng tạo/tắt mã QR (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 2 – UC08: Tạo/tắt mã QR**
 
 1. Giảng viên chọn chức năng Điểm danh trên giao diện `LecturerHomeView`.
 2. Lớp `LecturerHomeView` gọi lớp `QRSessionView`.
@@ -543,6 +543,8 @@ Kịch bản chi tiết cho chức năng tạo/tắt mã QR (bỏ qua giai đo�
 17. Lớp `Attendance` trả kết quả về lớp `QRSessionView`.
 18. Lớp `QRSessionView` hiển thị thông báo đóng điểm danh thành công và cập nhật danh sách cho giảng viên.
 
+**Ngoại lệ: Buổi học đã có QR đang hoạt động** — Lớp `Attendance` trả về lỗi; lớp `QRSessionView` hiển thị thông báo "Buổi học đã mở điểm danh".
+
 ```plantuml
 @startuml
 skinparam shadowing false
@@ -556,47 +558,76 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC08 – Tạo/tắt mã QR (Tuần tự Phân tích)
+title UC08 – QR Code Attendance – Analysis Sequence (18 steps)
 
-actor "Giảng viên" as GV
+actor "Lecturer" as Actor
 boundary LecturerHomeView
 boundary QRSessionView
 entity Class
 entity Attendance
 
-GV -> LecturerHomeView : 1: chọn chức năng Điểm danh
+Actor -> LecturerHomeView : 1: click btnAttendance
 activate LecturerHomeView
-LecturerHomeView -> QRSessionView : 2: gọi QRSessionView
+LecturerHomeView -> QRSessionView : 2: call
 activate QRSessionView
-QRSessionView --> GV : 3: hiển thị giao diện
-GV -> QRSessionView : 4: nhập từ khóa + click Tìm
-QRSessionView -> Class : 5: gọi đến Class để xử lý
+QRSessionView --> Actor : 3: display
+Actor -> QRSessionView : 4: input keyword + click btnSearch
+QRSessionView -> Class : 5: call
 activate Class
 Class -> Class : 6: searchClassSection()
-Class --> QRSessionView : 7: trả kết quả
+Class --> QRSessionView : 7: return
 deactivate Class
-QRSessionView --> GV : 8: hiển thị danh sách lớp học phần
-GV -> QRSessionView : 9: chọn lớp INT1340.01, chọn buổi + click "Tạo mã QR"
-QRSessionView -> Attendance : 10: gọi đến Attendance để xử lý
+QRSessionView --> Actor : 8: display class list
+Actor -> QRSessionView : 9: select class + select session + click btnGenerateQr
+QRSessionView -> Attendance : 10: call
 activate Attendance
 Attendance -> Attendance : 11: generateQr()
-Attendance --> QRSessionView : 12: trả kết quả
+Attendance --> QRSessionView : 12: return
 deactivate Attendance
-QRSessionView --> GV : 13: hiển thị mã QR điểm danh
-GV -> QRSessionView : 14: click "Tắt mã QR"
-QRSessionView -> Attendance : 15: gọi đến Attendance để xử lý
+QRSessionView --> Actor : 13: display QR code
+Actor -> QRSessionView : 14: click btnDeactivateQr
+QRSessionView -> Attendance : 15: call
 activate Attendance
 Attendance -> Attendance : 16: deactivateQr()
-Attendance --> QRSessionView : 17: trả kết quả
+Attendance --> QRSessionView : 17: return
 deactivate Attendance
-QRSessionView --> GV : 18: thông báo đóng điểm danh + cập nhật danh sách
+QRSessionView --> Actor : 18: showMessage("Attendance closed")
 deactivate QRSessionView
 deactivate LecturerHomeView
 @enduml
@@ -604,9 +635,9 @@ deactivate LecturerHomeView
 
 ---
 
-### Biểu đồ UC09: Quản lý điểm danh
+### UC09: Quản lý điểm danh (20 bước)
 
-Kịch bản chi tiết cho chức năng quản lý điểm danh (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 2 – UC09: Quản lý điểm danh**
 
 1. Giảng viên chọn chức năng Quản lý điểm danh trên giao diện `LecturerHomeView`.
 2. Lớp `LecturerHomeView` gọi lớp `AttendanceManageView`.
@@ -629,6 +660,8 @@ Kịch bản chi tiết cho chức năng quản lý điểm danh (bỏ qua giai 
 19. Lớp `Attendance` trả kết quả về lớp `AttendanceManageView`.
 20. Lớp `AttendanceManageView` hiển thị thông báo cập nhật thành công và cập nhật bảng cho giảng viên.
 
+**Ngoại lệ: Trạng thái mới trùng trạng thái cũ** — Lớp `Attendance` trả về lỗi; lớp `AttendanceManageView` hiển thị thông báo "Trạng thái không thay đổi".
+
 ```plantuml
 @startuml
 skinparam shadowing false
@@ -642,49 +675,78 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC09 – Quản lý điểm danh (Tuần tự Phân tích)
+title UC09 – Manage Attendance – Analysis Sequence (20 steps)
 
-actor "Giảng viên" as GV
+actor "Lecturer" as Actor
 boundary LecturerHomeView
 boundary AttendanceManageView
 entity Class
 entity Attendance
 
-GV -> LecturerHomeView : 1: chọn chức năng Quản lý điểm danh
+Actor -> LecturerHomeView : 1: click btnManageAttendance
 activate LecturerHomeView
-LecturerHomeView -> AttendanceManageView : 2: gọi AttendanceManageView
+LecturerHomeView -> AttendanceManageView : 2: call
 activate AttendanceManageView
-AttendanceManageView --> GV : 3: hiển thị giao diện
-GV -> AttendanceManageView : 4: nhập từ khóa + click Tìm
-AttendanceManageView -> Class : 5: gọi đến Class để xử lý
+AttendanceManageView --> Actor : 3: display
+Actor -> AttendanceManageView : 4: input keyword + click btnSearch
+AttendanceManageView -> Class : 5: call
 activate Class
 Class -> Class : 6: searchClassSection()
-Class --> AttendanceManageView : 7: trả kết quả
+Class --> AttendanceManageView : 7: return
 deactivate Class
-AttendanceManageView --> GV : 8: hiển thị danh sách lớp học phần
-GV -> AttendanceManageView : 9: chọn lớp INT1340.01, chọn buổi học
-AttendanceManageView -> Attendance : 10: gọi đến Attendance để xử lý
+AttendanceManageView --> Actor : 8: display class list
+Actor -> AttendanceManageView : 9: select class + select session
+AttendanceManageView -> Attendance : 10: call
 activate Attendance
 Attendance -> Attendance : 11: viewAttendance()
-Attendance --> AttendanceManageView : 12: trả kết quả
+Attendance --> AttendanceManageView : 12: return
 deactivate Attendance
-AttendanceManageView --> GV : 13: hiển thị bảng điểm danh theo buổi học
-GV -> AttendanceManageView : 14: click dòng SV Phạm Thị Thiên Hà
-AttendanceManageView --> GV : 15: hiển thị modal chỉnh sửa trạng thái
-GV -> AttendanceManageView : 16: chọn trạng thái + nhập lý do + click Lưu
-AttendanceManageView -> Attendance : 17: gọi đến Attendance để xử lý
+AttendanceManageView --> Actor : 13: display attendance table
+Actor -> AttendanceManageView : 14: click student row
+AttendanceManageView --> Actor : 15: display edit modal
+Actor -> AttendanceManageView : 16: select status + input reason + click btnSave
+AttendanceManageView -> Attendance : 17: call
 activate Attendance
 Attendance -> Attendance : 18: markManualAttendance()
-Attendance --> AttendanceManageView : 19: trả kết quả
+Attendance --> AttendanceManageView : 19: return
 deactivate Attendance
-AttendanceManageView --> GV : 20: thông báo cập nhật thành công + cập nhật bảng
+AttendanceManageView --> Actor : 20: showMessage("Updated")
 deactivate AttendanceManageView
 deactivate LecturerHomeView
 @enduml
@@ -692,9 +754,9 @@ deactivate LecturerHomeView
 
 ---
 
-### Biểu đồ UC10: Xem điểm
+### UC10: Xem điểm (12 bước)
 
-Kịch bản chi tiết cho chức năng xem điểm (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 2 – UC10: Xem điểm**
 
 1. Sinh viên chọn chức năng Xem điểm trên giao diện `StudentHomeView`.
 2. Lớp `StudentHomeView` gọi lớp `GradeView`.
@@ -709,6 +771,8 @@ Kịch bản chi tiết cho chức năng xem điểm (bỏ qua giai đoạn đă
 11. Lớp `Grade` trả kết quả về lớp `GradeView`.
 12. Lớp `GradeView` hiển thị bảng chi tiết điểm theo kỳ học cho sinh viên.
 
+**Ngoại lệ: Học phần chưa có điểm** — Lớp `Grade` trả về danh sách rỗng; lớp `GradeView` hiển thị thông báo "Chưa có điểm".
+
 ```plantuml
 @startuml
 skinparam shadowing false
@@ -722,38 +786,67 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC10 – Xem điểm (Tuần tự Phân tích)
+title UC10 – View Grade – Analysis Sequence (12 steps)
 
-actor "Sinh viên" as SV
+actor "Student" as Actor
 boundary StudentHomeView
 boundary GradeView
 entity Grade
 
-SV -> StudentHomeView : 1: chọn chức năng Xem điểm
+Actor -> StudentHomeView : 1: click btnViewGrade
 activate StudentHomeView
-StudentHomeView -> GradeView : 2: gọi GradeView
+StudentHomeView -> GradeView : 2: call
 activate GradeView
-GradeView --> SV : 3: hiển thị giao diện
-GradeView -> Grade : 4: gọi đến Grade để xử lý
+GradeView --> Actor : 3: display
+GradeView -> Grade : 4: call
 activate Grade
 Grade -> Grade : 5: viewGrade()
-Grade --> GradeView : 6: trả kết quả
+Grade --> GradeView : 6: return
 deactivate Grade
-GradeView --> SV : 7: hiển thị danh sách lớp kèm điểm tổng kết
-SV -> GradeView : 8: chọn học kỳ "2024-1"
-GradeView -> Grade : 9: gọi đến Grade để xử lý
+GradeView --> Actor : 7: display course list with grades
+Actor -> GradeView : 8: select semester "2024-1"
+GradeView -> Grade : 9: call
 activate Grade
 Grade -> Grade : 10: viewGradeBySemester()
-Grade --> GradeView : 11: trả kết quả
+Grade --> GradeView : 11: return
 deactivate Grade
-GradeView --> SV : 12: hiển thị bảng chi tiết điểm theo kỳ học
+GradeView --> Actor : 12: display grade detail
 deactivate GradeView
 deactivate StudentHomeView
 @enduml
@@ -761,9 +854,9 @@ deactivate StudentHomeView
 
 ---
 
-### Biểu đồ UC11: Nhập/sửa điểm
+### UC11: Nhập/sửa điểm (15 bước)
 
-Kịch bản chi tiết cho chức năng nhập/sửa điểm (bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 2 – UC11: Nhập/sửa điểm**
 
 1. Giảng viên chọn chức năng Nhập điểm trên giao diện `LecturerHomeView`.
 2. Lớp `LecturerHomeView` gọi lớp `GradeEntryView`.
@@ -781,6 +874,8 @@ Kịch bản chi tiết cho chức năng nhập/sửa điểm (bỏ qua giai đo
 14. Lớp `Grade` trả kết quả về lớp `GradeEntryView`.
 15. Lớp `GradeEntryView` hiển thị thông báo nộp điểm thành công cho giảng viên.
 
+**Ngoại lệ: Điểm nhập ngoài thang [0, 10]** — Lớp `GradeEntryView` hiển thị lỗi validation inline trước khi gọi `Grade`.
+
 ```plantuml
 @startuml
 skinparam shadowing false
@@ -794,42 +889,71 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC11 – Nhập/sửa điểm (Tuần tự Phân tích)
+title UC11 – Enter / Edit Grade – Analysis Sequence (15 steps)
 
-actor "Giảng viên" as GV
+actor "Lecturer" as Actor
 boundary LecturerHomeView
 boundary GradeEntryView
 entity Class
 entity Grade
 
-GV -> LecturerHomeView : 1: chọn chức năng Nhập điểm
+Actor -> LecturerHomeView : 1: click btnEnterGrade
 activate LecturerHomeView
-LecturerHomeView -> GradeEntryView : 2: gọi GradeEntryView
+LecturerHomeView -> GradeEntryView : 2: call
 activate GradeEntryView
-GradeEntryView --> GV : 3: hiển thị giao diện
-GV -> GradeEntryView : 4: nhập từ khóa + click Tìm
-GradeEntryView -> Class : 5: gọi đến Class để xử lý
+GradeEntryView --> Actor : 3: display
+Actor -> GradeEntryView : 4: input keyword + click btnSearch
+GradeEntryView -> Class : 5: call
 activate Class
 Class -> Class : 6: searchClassSection()
-Class --> GradeEntryView : 7: trả kết quả
+Class --> GradeEntryView : 7: return
 deactivate Class
-GradeEntryView --> GV : 8: hiển thị danh sách lớp học phần
-GV -> GradeEntryView : 9: chọn lớp INT1340.01
-GradeEntryView --> GV : 10: hiển thị bảng SV với ô nhập điểm
-GV -> GradeEntryView : 11: nhập điểm + click "Xác nhận nộp điểm"
-GradeEntryView -> Grade : 12: gọi đến Grade để xử lý
+GradeEntryView --> Actor : 8: display class list
+Actor -> GradeEntryView : 9: select class
+GradeEntryView --> Actor : 10: display grade entry table
+Actor -> GradeEntryView : 11: input grades + click btnSubmitGrades
+GradeEntryView -> Grade : 12: call
 activate Grade
 Grade -> Grade : 13: enterGrade()
-Grade --> GradeEntryView : 14: trả kết quả
+Grade --> GradeEntryView : 14: return
 deactivate Grade
-GradeEntryView --> GV : 15: thông báo nộp điểm thành công
+GradeEntryView --> Actor : 15: showMessage("Grades submitted")
 deactivate GradeEntryView
 deactivate LecturerHomeView
 @enduml
@@ -1314,9 +1438,9 @@ Class "1" --> "*" Schedule
 
 ## III.4. Biểu đồ tuần tự thiết kế – Module 3
 
-### Biểu đồ UC08: Tạo/tắt mã QR
+### UC08: Tạo/tắt mã QR (25 bước)
 
-Kịch bản chi tiết cho chức năng tạo/tắt mã QR (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 3 – UC08: Tạo/tắt mã QR**
 
 1. Giảng viên chọn chức năng Điểm danh trên giao diện `LecturerHomePage`.
 2. Lớp `LecturerHomePage` gọi lớp `QRSessionPage`.
@@ -1357,17 +1481,45 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  control { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC08 – Tạo/tắt mã QR (Tuần tự Thiết kế)
+title UC08 – QR Code Attendance – Design Sequence (25 steps)
 
-actor "Giảng viên" as GV
+actor "Lecturer" as Actor
 boundary LecturerHomePage
 boundary QRSessionPage
 control ClassController
@@ -1375,45 +1527,45 @@ control AttendanceController
 entity Class
 entity Attendance
 
-GV -> LecturerHomePage : 1: chọn chức năng Điểm danh
+Actor -> LecturerHomePage : 1: click btnAttendance
 activate LecturerHomePage
-LecturerHomePage -> QRSessionPage : 2: gọi QRSessionPage
+LecturerHomePage -> QRSessionPage : 2: call
 activate QRSessionPage
 QRSessionPage -> QRSessionPage : 3: formLoad()
-QRSessionPage --> GV : 4: hiển thị giao diện
-GV -> QRSessionPage : 5: btnSearchClassClick()
-QRSessionPage -> ClassController : 6: gọi đến ClassController để xử lý
+QRSessionPage --> Actor : 4: display
+Actor -> QRSessionPage : 5: btnSearchClassClick()
+QRSessionPage -> ClassController : 6: call
 activate ClassController
-ClassController -> Class : 7: gọi đến Class để xử lý
+ClassController -> Class : 7: call
 activate Class
 Class -> Class : 8: searchClassSection(keyword : String)
 Class --> ClassController : 9: List<Class>
 deactivate Class
 ClassController --> QRSessionPage : 10: List<Class>
 deactivate ClassController
-QRSessionPage --> GV : 11: hiển thị danh sách lớp học phần
-GV -> QRSessionPage : 12: btnGenerateQrClick()
-QRSessionPage -> AttendanceController : 13: gọi đến AttendanceController để xử lý
+QRSessionPage --> Actor : 11: display class list
+Actor -> QRSessionPage : 12: btnGenerateQrClick()
+QRSessionPage -> AttendanceController : 13: call
 activate AttendanceController
-AttendanceController -> Attendance : 14: gọi đến Attendance để xử lý
+AttendanceController -> Attendance : 14: call
 activate Attendance
 Attendance -> Attendance : 15: generateQr(schedule : Schedule)
 Attendance --> AttendanceController : 16: Attendance
 deactivate Attendance
 AttendanceController --> QRSessionPage : 17: Attendance
 deactivate AttendanceController
-QRSessionPage --> GV : 18: hiển thị mã QR điểm danh
-GV -> QRSessionPage : 19: btnDeactivateQrClick()
-QRSessionPage -> AttendanceController : 20: gọi đến AttendanceController để xử lý
+QRSessionPage --> Actor : 18: display QR code
+Actor -> QRSessionPage : 19: btnDeactivateQrClick()
+QRSessionPage -> AttendanceController : 20: call
 activate AttendanceController
-AttendanceController -> Attendance : 21: gọi đến Attendance để xử lý
+AttendanceController -> Attendance : 21: call
 activate Attendance
 Attendance -> Attendance : 22: deactivateQr(schedule : Schedule)
 Attendance --> AttendanceController : 23: boolean
 deactivate Attendance
 AttendanceController --> QRSessionPage : 24: boolean
 deactivate AttendanceController
-QRSessionPage --> GV : 25: thông báo đóng điểm danh + cập nhật bảng
+QRSessionPage --> Actor : 25: showMessage("Attendance closed")
 deactivate QRSessionPage
 deactivate LecturerHomePage
 @enduml
@@ -1421,9 +1573,9 @@ deactivate LecturerHomePage
 
 ---
 
-### Biểu đồ UC09: Quản lý điểm danh
+### UC09: Quản lý điểm danh (18 bước)
 
-Kịch bản chi tiết cho chức năng quản lý điểm danh (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 3 – UC09: Quản lý điểm danh**
 
 1. Giảng viên chọn chức năng Quản lý điểm danh trên giao diện `LecturerHomePage`.
 2. Lớp `LecturerHomePage` gọi lớp `AttendanceManagePage`.
@@ -1457,50 +1609,78 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  control { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC09 – Quản lý điểm danh (Tuần tự Thiết kế)
+title UC09 – Manage Attendance – Design Sequence (18 steps)
 
-actor "Giảng viên" as GV
+actor "Lecturer" as Actor
 boundary LecturerHomePage
 boundary AttendanceManagePage
 control AttendanceController
 entity Attendance
 
-GV -> LecturerHomePage : 1: chọn chức năng Quản lý điểm danh
+Actor -> LecturerHomePage : 1: click btnManageAttendance
 activate LecturerHomePage
-LecturerHomePage -> AttendanceManagePage : 2: gọi AttendanceManagePage
+LecturerHomePage -> AttendanceManagePage : 2: call
 activate AttendanceManagePage
 AttendanceManagePage -> AttendanceManagePage : 3: formLoad()
-AttendanceManagePage -> AttendanceController : 4: gọi đến AttendanceController để xử lý
+AttendanceManagePage -> AttendanceController : 4: call
 activate AttendanceController
-AttendanceController -> Attendance : 5: gọi đến Attendance để xử lý
+AttendanceController -> Attendance : 5: call
 activate Attendance
 Attendance -> Attendance : 6: viewAttendance(schedule : Schedule)
 Attendance --> AttendanceController : 7: List<Attendance>
 deactivate Attendance
 AttendanceController --> AttendanceManagePage : 8: List<Attendance>
 deactivate AttendanceController
-AttendanceManagePage --> GV : 9: hiển thị bảng điểm danh theo buổi học
-GV -> AttendanceManagePage : 10: tblAttendanceClick(id : int)
-AttendanceManagePage --> GV : 11: hiển thị modal chỉnh sửa trạng thái
-GV -> AttendanceManagePage : 12: btnSaveManualClick()
-AttendanceManagePage -> AttendanceController : 13: gọi đến AttendanceController để xử lý
+AttendanceManagePage --> Actor : 9: display attendance table
+Actor -> AttendanceManagePage : 10: tblAttendanceClick(id : int)
+AttendanceManagePage --> Actor : 11: display edit modal
+Actor -> AttendanceManagePage : 12: btnSaveManualClick()
+AttendanceManagePage -> AttendanceController : 13: call
 activate AttendanceController
-AttendanceController -> Attendance : 14: gọi đến Attendance để xử lý
+AttendanceController -> Attendance : 14: call
 activate Attendance
 Attendance -> Attendance : 15: markManualAttendance(attendance : Attendance)
 Attendance --> AttendanceController : 16: boolean
 deactivate Attendance
 AttendanceController --> AttendanceManagePage : 17: boolean
 deactivate AttendanceController
-AttendanceManagePage --> GV : 18: thông báo cập nhật thành công + cập nhật bảng
+AttendanceManagePage --> Actor : 18: showMessage("Updated")
 deactivate AttendanceManagePage
 deactivate LecturerHomePage
 @enduml
@@ -1508,9 +1688,9 @@ deactivate LecturerHomePage
 
 ---
 
-### Biểu đồ UC10: Xem điểm
+### UC10: Xem điểm (16 bước)
 
-Kịch bản chi tiết cho chức năng xem điểm (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 3 – UC10: Xem điểm**
 
 1. Sinh viên chọn chức năng Xem điểm trên giao diện `StudentHomePage`.
 2. Lớp `StudentHomePage` gọi lớp `GradePage`.
@@ -1542,48 +1722,76 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  control { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC10 – Xem điểm (Tuần tự Thiết kế)
+title UC10 – View Grade – Design Sequence (16 steps)
 
-actor "Sinh viên" as SV
+actor "Student" as Actor
 boundary StudentHomePage
 boundary GradePage
 control GradeController
 entity Grade
 
-SV -> StudentHomePage : 1: chọn chức năng Xem điểm
+Actor -> StudentHomePage : 1: click btnViewGrade
 activate StudentHomePage
-StudentHomePage -> GradePage : 2: gọi GradePage
+StudentHomePage -> GradePage : 2: call
 activate GradePage
 GradePage -> GradePage : 3: formLoad()
-GradePage -> GradeController : 4: gọi đến GradeController để xử lý
+GradePage -> GradeController : 4: call
 activate GradeController
-GradeController -> Grade : 5: gọi đến Grade để xử lý
+GradeController -> Grade : 5: call
 activate Grade
 Grade -> Grade : 6: viewGrade(student : User)
 Grade --> GradeController : 7: List<Grade>
 deactivate Grade
 GradeController --> GradePage : 8: List<Grade>
 deactivate GradeController
-GradePage --> SV : 9: hiển thị danh sách lớp kèm điểm tổng kết
-SV -> GradePage : 10: tblCourseListClick(classId : int)
-GradePage -> GradeController : 11: gọi đến GradeController để xử lý
+GradePage --> Actor : 9: display course list
+Actor -> GradePage : 10: tblCourseListClick(classId : int)
+GradePage -> GradeController : 11: call
 activate GradeController
-GradeController -> Grade : 12: gọi đến Grade để xử lý
+GradeController -> Grade : 12: call
 activate Grade
 Grade -> Grade : 13: viewGradeBySemester(student : User, semester : String)
 Grade --> GradeController : 14: List<Grade>
 deactivate Grade
 GradeController --> GradePage : 15: List<Grade>
 deactivate GradeController
-GradePage --> SV : 16: hiển thị bảng chi tiết điểm theo kỳ học
+GradePage --> Actor : 16: display grade detail
 deactivate GradePage
 deactivate StudentHomePage
 @enduml
@@ -1591,9 +1799,9 @@ deactivate StudentHomePage
 
 ---
 
-### Biểu đồ UC11: Nhập/sửa điểm
+### UC11: Nhập/sửa điểm (20 bước)
 
-Kịch bản chi tiết cho chức năng nhập/sửa điểm (thiết kế, bỏ qua giai đoạn đăng nhập) diễn ra như sau:
+**Kịch bản phiên bản 3 – UC11: Nhập/sửa điểm**
 
 1. Giảng viên chọn chức năng Nhập điểm trên giao diện `LecturerHomePage`.
 2. Lớp `LecturerHomePage` gọi lớp `GradeEntryPage`.
@@ -1606,14 +1814,15 @@ Kịch bản chi tiết cho chức năng nhập/sửa điểm (thiết kế, b�
 9. Lớp `Class` trả kết quả `List<Class>` về lớp `ClassController`.
 10. Lớp `ClassController` trả kết quả `List<Class>` về lớp `GradeEntryPage`.
 11. Lớp `GradeEntryPage` hiển thị danh sách lớp học phần cho giảng viên.
-12. Giảng viên chọn lớp INT1340.01; lớp `GradeEntryPage` hiển thị bảng sinh viên với các ô nhập điểm.
-13. Giảng viên nhập điểm cho từng sinh viên và click nút "Xác nhận nộp điểm"; lớp `GradeEntryPage` gọi `btnSubmitGradesClick()`.
-14. Lớp `GradeEntryPage` gọi đến lớp `GradeController` để xử lý.
-15. Lớp `GradeController` gọi đến lớp `Grade` để xử lý.
-16. Lớp `Grade` gọi hàm `enterGrade(grades : List<Grade>) : boolean`.
-17. Lớp `Grade` trả kết quả `boolean` về lớp `GradeController`.
-18. Lớp `GradeController` trả kết quả `boolean` về lớp `GradeEntryPage`.
-19. Lớp `GradeEntryPage` hiển thị thông báo nộp điểm thành công cho giảng viên.
+12. Giảng viên chọn lớp INT1340.01.
+13. Lớp `GradeEntryPage` hiển thị bảng sinh viên với các ô nhập điểm.
+14. Giảng viên nhập điểm cho từng sinh viên và click nút "Xác nhận nộp điểm"; lớp `GradeEntryPage` gọi `btnSubmitGradesClick()`.
+15. Lớp `GradeEntryPage` gọi đến lớp `GradeController` để xử lý.
+16. Lớp `GradeController` gọi đến lớp `Grade` để xử lý.
+17. Lớp `Grade` gọi hàm `enterGrade(grades : List<Grade>) : boolean`.
+18. Lớp `Grade` trả kết quả `boolean` về lớp `GradeController`.
+19. Lớp `GradeController` trả kết quả `boolean` về lớp `GradeEntryPage`.
+20. Lớp `GradeEntryPage` hiển thị thông báo nộp điểm thành công cho giảng viên.
 
 ```plantuml
 @startuml
@@ -1628,17 +1837,45 @@ sequenceDiagram {
   FontName "Arial"
   FontSize 10
   FontColor #000000
-  boundary { BackgroundColor #7AD2FF; LineColor #000000 }
-  control { BackgroundColor #7AD2FF; LineColor #000000 }
-  entity { BackgroundColor #7AD2FF; LineColor #000000 }
-  actor { BackgroundColor transparent; LineColor #000000 }
-  lifeline { LineColor #000000; LineStyle 5-5 }
-  arrow { LineColor #000000; LineThickness 1; FontSize 10 }
+
+  participant {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+    LineThickness 1
+  }
+
+  actor {
+    BackgroundColor transparent
+    LineColor #000000
+  }
+  boundary {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  control {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+  entity {
+    BackgroundColor #7AD2FF
+    LineColor #000000
+  }
+
+  lifeline {
+    LineColor #000000
+    LineStyle 5-5
+  }
+
+  arrow {
+    LineColor #000000
+    LineThickness 1
+    FontSize 10
+  }
 }
 </style>
-title UC11 – Nhập/sửa điểm (Tuần tự Thiết kế)
+title UC11 – Enter / Edit Grade – Design Sequence (20 steps)
 
-actor "Giảng viên" as GV
+actor "Lecturer" as Actor
 boundary LecturerHomePage
 boundary GradeEntryPage
 control ClassController
@@ -1646,36 +1883,36 @@ control GradeController
 entity Class
 entity Grade
 
-GV -> LecturerHomePage : 1: chọn chức năng Nhập điểm
+Actor -> LecturerHomePage : 1: click btnEnterGrade
 activate LecturerHomePage
-LecturerHomePage -> GradeEntryPage : 2: gọi GradeEntryPage
+LecturerHomePage -> GradeEntryPage : 2: call
 activate GradeEntryPage
 GradeEntryPage -> GradeEntryPage : 3: formLoad()
-GradeEntryPage --> GV : 4: hiển thị giao diện
-GV -> GradeEntryPage : 5: btnSearchClassClick()
-GradeEntryPage -> ClassController : 6: gọi đến ClassController để xử lý
+GradeEntryPage --> Actor : 4: display
+Actor -> GradeEntryPage : 5: btnSearchClassClick()
+GradeEntryPage -> ClassController : 6: call
 activate ClassController
-ClassController -> Class : 7: gọi đến Class để xử lý
+ClassController -> Class : 7: call
 activate Class
 Class -> Class : 8: searchClassSection(keyword : String)
 Class --> ClassController : 9: List<Class>
 deactivate Class
 ClassController --> GradeEntryPage : 10: List<Class>
 deactivate ClassController
-GradeEntryPage --> GV : 11: hiển thị danh sách lớp học phần
-GV -> GradeEntryPage : 12: chọn lớp INT1340.01
-GradeEntryPage --> GV : 13: hiển thị bảng SV với ô nhập điểm
-GV -> GradeEntryPage : 14: btnSubmitGradesClick()
-GradeEntryPage -> GradeController : 15: gọi đến GradeController để xử lý
+GradeEntryPage --> Actor : 11: display class list
+Actor -> GradeEntryPage : 12: select class
+GradeEntryPage --> Actor : 13: display grade entry table
+Actor -> GradeEntryPage : 14: btnSubmitGradesClick()
+GradeEntryPage -> GradeController : 15: call
 activate GradeController
-GradeController -> Grade : 16: gọi đến Grade để xử lý
+GradeController -> Grade : 16: call
 activate Grade
 Grade -> Grade : 17: enterGrade(grades : List<Grade>)
 Grade --> GradeController : 18: boolean
 deactivate Grade
 GradeController --> GradeEntryPage : 19: boolean
 deactivate GradeController
-GradeEntryPage --> GV : 20: thông báo nộp điểm thành công
+GradeEntryPage --> Actor : 20: showMessage("Grades submitted")
 deactivate GradeEntryPage
 deactivate LecturerHomePage
 @enduml

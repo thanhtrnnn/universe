@@ -1,0 +1,10 @@
+' BCE Color Overlay — add after vp-base.puml for colored packages
+' Usage: paste after base theme in @startuml block
+
+skinparam class {
+  BackgroundColor<<Boundary>> #DDEEFF
+  BackgroundColor<<Component>> #DDEEFF
+  BackgroundColor<<DAO>> #FFE0B2
+  BackgroundColor<<Control>> #FFE0B2
+  BackgroundColor<<Entity>> #FFF3CD
+}

@@ -1,0 +1,92 @@
+' VP Base Theme v2 — matches Visual Paradigm default styling
+' Font: Arial, 10pt
+' Sequence: circle notation for boundary/entity, rectangle for participant
+' UC: #7ACFF5 blue fill
+
+skinparam linetype ortho
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 10
+skinparam shadowing false
+skinparam arrowColor #000000
+skinparam lineColor #000000
+hide circle
+
+skinparam usecase {
+  BackgroundColor #7ACFF5
+  BorderColor Black
+  FontColor Black
+}
+
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor Black
+}
+
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  FontColor #000000
+  FontSize 10
+  AttributeFontSize 9
+  AttributeIconSize 0
+  BorderThickness 1
+}
+
+skinparam package {
+  Style rectangle
+  FontSize 11
+  MaxWidth 800
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+}
+
+skinparam sequence {
+  ArrowColor Black
+  ActorBorderColor Black
+  ActorBackgroundColor #7ACFF5
+  ParticipantBorderColor Black
+  ParticipantBackgroundColor #7ACFF5
+  LifeLineBorderColor Black
+  LifeLineBackgroundColor #7ACFF5
+  BoundaryBorderColor Black
+  BoundaryBackgroundColor #7ACFF5
+  EntityBorderColor Black
+  EntityBackgroundColor #7ACFF5
+  MessageFontSize 10
+}
+
+<style>
+sequenceDiagram {
+  actor {
+    Padding 2
+    Margin 2
+    FontName "Arial"
+    FontSize 10
+  }
+  participant {
+    Padding 2
+    Margin 2
+    FontName "Arial"
+    FontSize 10
+  }
+  lifeLine {
+    LineThickness 1
+    Padding 4
+  }
+  message {
+    FontName "Arial"
+    FontSize 10
+    Padding 1
+  }
+  divider {
+    FontName "Arial"
+    FontSize 9
+  }
+  group {
+    FontName "Arial"
+    FontSize 9
+  }
+}
+</style>
+
+hide empty members
