@@ -301,17 +301,14 @@ Enrollment "1" -- "n" Grade : có điểm số
 ### UC08 – Tạo/tắt mã QR
 
 **Phân tích chi tiết chức năng Tạo/tắt mã QR:**
-- GV vào giao diện → đề xuất lớp `QRSessionView` với:
-  - `inClassSection` — ô nhập từ khóa tìm lớp học phần
-  - `outsubListClass` — bảng kết quả lớp học phần (hiển thị và chọn)
-  - `subGenerateQr` — nút "Tạo mã QR"
-  - `subDeactivateQr` — nút "Tắt mã QR"
-  - `outAttendanceList` — bảng danh sách sinh viên kèm trạng thái điểm danh
-- GV nhập từ khóa và nhấn tìm → `QRSessionView` gọi `searchClassSection()` của lớp `Class`; kết quả hiển thị ở `outsubListClass`.
-- GV chọn lớp, chọn buổi học và nhấn `subGenerateQr` → `QRSessionView` gọi `generateQr()` của lớp `Attendance`.
-- Hệ thống hiển thị mã QR điểm danh → `QRSessionView` cập nhật giao diện.
-- GV nhấn `subDeactivateQr` → `QRSessionView` gọi `deactivateQr()` của lớp `Attendance`.
-- Hệ thống đóng điểm danh, ghi vắng cho SV chưa điểm danh → `outAttendanceList` cập nhật trạng thái.
+- Sau khi đăng nhập thành công, hệ thống hiển thị giao diện chính của giảng viên → đề xuất lớp `LecturerHomeView`, có ít nhất nút chọn điểm danh (`-subAttendance`).
+- GV click vào `subAttendance` → giao diện tạo/tắt mã QR hiện lên → đề xuất lớp `QRSessionView`, giao diện này chứa: ô nhập từ khóa tìm lớp học phần (`-inClassSection`), nút tìm kiếm (`-subSearch`), bảng kết quả lớp học phần có thể chọn (`-outsubListClass`), danh sách buổi học của lớp đã chọn (`-outsubListSession`), vùng hiển thị mã QR (`-outQRCode`), nút tạo mã QR (`-subGenerateQr`), nút tắt mã QR (`-subDeactivateQr`) và bảng danh sách sinh viên kèm trạng thái điểm danh (`-outAttendanceList`).
+- GV nhập từ khóa vào `inClassSection` và click `subSearch` → hệ thống tra cứu lớp học phần → cần chức năng `searchClassSection()` → chức năng này là hành động của đối tượng thực thể `Class` (lớp này sở hữu các thuộc tính `-classId`, `-name`, `-courseId`).
+- Hệ thống trả về kết quả → `outsubListClass` hiển thị danh sách lớp; GV chọn một lớp → `outsubListSession` hiển thị danh sách buổi học.
+- GV chọn buổi học trong `outsubListSession` và click `subGenerateQr` → hệ thống tạo mã QR điểm danh cho buổi học → cần chức năng `generateQr()` → chức năng này là hành động của đối tượng thực thể `Attendance` (lớp này sở hữu các thuộc tính `-classSessionId`, `-studentId`, `-status`, `-method`).
+- Hệ thống trả về mã QR → `outQRCode` hiển thị mã; `outAttendanceList` hiển thị danh sách SV với trạng thái điểm danh ban đầu.
+- GV click `subDeactivateQr` sau khi kết thúc điểm danh → hệ thống đóng điểm danh và ghi vắng cho SV chưa điểm danh → cần chức năng `deactivateQr()` của đối tượng thực thể `Attendance`.
+- Hệ thống thông báo đóng điểm danh thành công, đồng thời tải lại `outAttendanceList` và quay về `QRSessionView`.
 
 ```plantuml
 @startuml
@@ -321,9 +318,15 @@ skinparam packageStyle rectangle
 title Biểu đồ lớp phân tích BCE – UC08: Tạo/tắt mã QR
 
 package "Boundary" #DDEEFF {
+  class LecturerHomeView {
+    -subAttendance
+  }
   class QRSessionView {
     -inClassSection
+    -subSearch
     -outsubListClass
+    -outsubListSession
+    -outQRCode
     -subGenerateQr
     -subDeactivateQr
     -outAttendanceList
@@ -332,14 +335,22 @@ package "Boundary" #DDEEFF {
 
 package "Entity" #FFF3CD {
   class Attendance {
+    -classSessionId
+    -studentId
+    -status
+    -method
     +generateQr()
     +deactivateQr()
   }
   class Class {
+    -classId
+    -name
+    -courseId
     +searchClassSection()
   }
 }
 
+LecturerHomeView --> QRSessionView
 QRSessionView --> Attendance
 QRSessionView --> Class
 @enduml
@@ -350,13 +361,13 @@ QRSessionView --> Class
 ### UC09 – Quản lý điểm danh
 
 **Phân tích chi tiết chức năng Quản lý điểm danh:**
-- GV vào giao diện → đề xuất lớp `AttendanceManageView` với:
-  - `inSession` — dropdown chọn buổi học
-  - `outsubAttendance` — bảng danh sách SV kèm trạng thái điểm danh (hiển thị và chọn để sửa)
-  - `subSaveManual` — nút "Lưu" trạng thái điểm danh thủ công
-- GV chọn buổi học qua `inSession` → `AttendanceManageView` gọi `viewAttendance()` của lớp `Attendance`; kết quả hiển thị ở `outsubAttendance`.
-- GV chọn SV trong `outsubAttendance` và chỉnh trạng thái → nhấn `subSaveManual` → `AttendanceManageView` gọi `markManualAttendance()` của lớp `Attendance`.
-- Hệ thống lưu và thông báo cập nhật thành công → `outsubAttendance` làm mới trạng thái.
+- Sau khi đăng nhập thành công, hệ thống hiển thị giao diện chính của giảng viên → đề xuất lớp `LecturerHomeView`, có ít nhất nút quản lý điểm danh (`-subManageAttendance`).
+- GV click vào `subManageAttendance` → giao diện quản lý điểm danh hiện lên → đề xuất lớp `AttendanceManageView`, giao diện này chứa: ô nhập từ khóa tìm lớp học phần (`-inClassSection`), nút tìm kiếm (`-subSearch`), bảng kết quả lớp học phần có thể chọn (`-outsubListClass`), dropdown chọn buổi học (`-inSession`), bảng danh sách SV kèm trạng thái điểm danh có thể chọn để sửa (`-outsubAttendance`) và nút lưu trạng thái thủ công (`-subSaveManual`).
+- GV nhập từ khóa và click `subSearch` → hệ thống tra cứu lớp học phần → cần chức năng `searchClassSection()` → chức năng này là hành động của đối tượng thực thể `Class` (lớp này sở hữu các thuộc tính `-classId`, `-name`, `-courseId`).
+- GV chọn lớp trong `outsubListClass` và chọn buổi học qua `inSession` → hệ thống tải danh sách điểm danh → cần chức năng `viewAttendance()` → chức năng này là hành động của đối tượng thực thể `Attendance` (lớp này sở hữu các thuộc tính `-classSessionId`, `-studentId`, `-status`, `-method`).
+- Hệ thống trả về danh sách → `outsubAttendance` hiển thị từng SV kèm trạng thái điểm danh hiện tại.
+- GV click vào một SV trong `outsubAttendance`, chọn trạng thái mới và click `subSaveManual` → hệ thống ghi nhận điểm danh thủ công → cần chức năng `markManualAttendance()` → chức năng này là hành động của đối tượng thực thể `Attendance`.
+- Hệ thống thông báo cập nhật thành công, đồng thời tải lại `outsubAttendance` thông qua hàm `viewAttendance()` và quay về `AttendanceManageView`.
 
 ```plantuml
 @startuml
@@ -366,7 +377,13 @@ skinparam packageStyle rectangle
 title Biểu đồ lớp phân tích BCE – UC09: Quản lý điểm danh
 
 package "Boundary" #DDEEFF {
+  class LecturerHomeView {
+    -subManageAttendance
+  }
   class AttendanceManageView {
+    -inClassSection
+    -subSearch
+    -outsubListClass
     -inSession
     -outsubAttendance
     -subSaveManual
@@ -375,12 +392,24 @@ package "Boundary" #DDEEFF {
 
 package "Entity" #FFF3CD {
   class Attendance {
+    -classSessionId
+    -studentId
+    -status
+    -method
     +viewAttendance()
     +markManualAttendance()
   }
+  class Class {
+    -classId
+    -name
+    -courseId
+    +searchClassSection()
+  }
 }
 
+LecturerHomeView --> AttendanceManageView
 AttendanceManageView --> Attendance
+AttendanceManageView --> Class
 @enduml
 ```
 
@@ -389,12 +418,12 @@ AttendanceManageView --> Attendance
 ### UC10 – Xem điểm
 
 **Phân tích chi tiết chức năng Xem điểm:**
-- SV vào giao diện xem điểm → đề xuất lớp `GradeView` với:
-  - `outsubCourseList` — danh sách lớp học phần đã đăng ký kèm điểm tổng kết (hiển thị và chọn để xem chi tiết)
-  - `inSemester` — bộ lọc học kỳ (dropdown)
-  - `outGradeDetail` — bảng chi tiết các đầu điểm theo kỳ học
-- SV mở trang → `GradeView` gọi `viewGrade()` của lớp `Grade`; kết quả hiển thị ở `outsubCourseList`.
-- SV chọn học kỳ qua `inSemester` → `GradeView` gọi `viewGradeBySemester()` của lớp `Grade`; kết quả hiển thị ở `outGradeDetail`.
+- Sau khi đăng nhập thành công, hệ thống hiển thị giao diện chính của sinh viên → đề xuất lớp `StudentHomeView`, có ít nhất nút xem điểm (`-subViewGrade`).
+- SV click vào `subViewGrade` → giao diện xem điểm hiện lên → đề xuất lớp `GradeView`, giao diện này chứa: danh sách lớp học phần đã đăng ký kèm điểm tổng kết (có thể chọn để xem chi tiết) (`-outsubCourseList`), bộ lọc học kỳ (`-inSemester`) và bảng chi tiết các đầu điểm theo kỳ học (`-outGradeDetail`).
+- Hệ thống tải danh sách lớp học phần và điểm tổng kết của SV → cần chức năng `viewGrade()` → chức năng này là hành động của đối tượng thực thể `Grade` (lớp này sở hữu các thuộc tính `-enrollmentId`, `-type`, `-score`, `-weight`).
+- Hệ thống trả về danh sách → `outsubCourseList` hiển thị các lớp kèm điểm tổng kết tương ứng.
+- SV chọn học kỳ qua `inSemester` → hệ thống lọc và hiển thị chi tiết điểm theo kỳ → cần chức năng `viewGradeBySemester()` → chức năng này là hành động của đối tượng thực thể `Grade`.
+- Hệ thống trả về kết quả → `outGradeDetail` hiển thị bảng các đầu điểm (thường xuyên, giữa kỳ, cuối kỳ, tổng kết) của học kỳ được chọn.
 
 ```plantuml
 @startuml
@@ -404,6 +433,9 @@ skinparam packageStyle rectangle
 title Biểu đồ lớp phân tích BCE – UC10: Xem điểm
 
 package "Boundary" #DDEEFF {
+  class StudentHomeView {
+    -subViewGrade
+  }
   class GradeView {
     -outsubCourseList
     -inSemester
@@ -413,11 +445,16 @@ package "Boundary" #DDEEFF {
 
 package "Entity" #FFF3CD {
   class Grade {
+    -enrollmentId
+    -type
+    -score
+    -weight
     +viewGrade()
     +viewGradeBySemester()
   }
 }
 
+StudentHomeView --> GradeView
 GradeView --> Grade
 @enduml
 ```
@@ -427,15 +464,14 @@ GradeView --> Grade
 ### UC11 – Nhập/sửa điểm
 
 **Phân tích chi tiết chức năng Nhập/sửa điểm:**
-- GV vào giao diện nhập điểm → đề xuất lớp `GradeEntryView` với:
-  - `inClassSection` — ô nhập từ khóa tìm lớp học phần
-  - `outsubListClass` — bảng kết quả lớp học phần (hiển thị và chọn)
-  - `inoutGrades` — bảng nhập điểm (hiển thị điểm hiện tại và cho phép nhập/sửa inline)
-  - `subSubmitGrades` — nút "Xác nhận nộp điểm"
-- GV nhập từ khóa vào `inClassSection` và nhấn tìm → `GradeEntryView` gọi `searchClassSection()` của lớp `Class`; kết quả hiển thị ở `outsubListClass`.
-- GV chọn lớp → hệ thống tải bảng SV vào `inoutGrades`.
-- GV nhập/sửa điểm trong `inoutGrades` và nhấn `subSubmitGrades` → `GradeEntryView` gọi `enterGrade()` hoặc `editGrade()` của lớp `Grade`.
-- Hệ thống lưu và thông báo thành công.
+- Sau khi đăng nhập thành công, hệ thống hiển thị giao diện chính của giảng viên → đề xuất lớp `LecturerHomeView`, có ít nhất nút nhập điểm (`-subEnterGrade`).
+- GV click vào `subEnterGrade` → giao diện nhập/sửa điểm hiện lên → đề xuất lớp `GradeEntryView`, giao diện này chứa: ô nhập từ khóa tìm lớp học phần (`-inClassSection`), nút tìm kiếm (`-subSearch`), bảng kết quả lớp học phần có thể chọn (`-outsubListClass`), bảng nhập điểm hiển thị điểm hiện tại và cho phép sửa inline (`-inoutGrades`) và nút xác nhận nộp điểm (`-subSubmitGrades`).
+- GV nhập từ khóa và click `subSearch` → hệ thống tra cứu lớp học phần → cần chức năng `searchClassSection()` → chức năng này là hành động của đối tượng thực thể `Class` (lớp này sở hữu các thuộc tính `-classId`, `-name`, `-courseId`).
+- GV chọn lớp trong `outsubListClass` → hệ thống tải bảng sinh viên kèm điểm hiện tại vào `inoutGrades`.
+- GV nhập điểm mới vào các ô trong `inoutGrades` và click `subSubmitGrades` → hệ thống lưu điểm → cần chức năng `enterGrade()` → chức năng này là hành động của đối tượng thực thể `Grade` (lớp này sở hữu các thuộc tính `-enrollmentId`, `-type`, `-score`, `-weight`).
+- Hệ thống thông báo nộp điểm thành công và tải lại `inoutGrades` thông qua hàm `enterGrade()`.
+- Khi GV sửa điểm đã nhập, click `subSubmitGrades` → hệ thống cập nhật điểm → cần chức năng `editGrade()` của đối tượng thực thể `Grade`.
+- Hệ thống thông báo cập nhật điểm thành công và quay về `GradeEntryView`.
 
 ```plantuml
 @startuml
@@ -445,8 +481,12 @@ skinparam packageStyle rectangle
 title Biểu đồ lớp phân tích BCE – UC11: Nhập/sửa điểm
 
 package "Boundary" #DDEEFF {
+  class LecturerHomeView {
+    -subEnterGrade
+  }
   class GradeEntryView {
     -inClassSection
+    -subSearch
     -outsubListClass
     -inoutGrades
     -subSubmitGrades
@@ -455,14 +495,22 @@ package "Boundary" #DDEEFF {
 
 package "Entity" #FFF3CD {
   class Grade {
+    -enrollmentId
+    -type
+    -score
+    -weight
     +enterGrade()
     +editGrade()
   }
   class Class {
+    -classId
+    -name
+    -courseId
     +searchClassSection()
   }
 }
 
+LecturerHomeView --> GradeEntryView
 GradeEntryView --> Grade
 GradeEntryView --> Class
 @enduml
