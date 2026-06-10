@@ -58,6 +58,19 @@ public class CourseDAO extends DAO {
         }
     }
 
+    public Course findById(String id) {
+        String sql = "SELECT * FROM tblCourse WHERE id = ?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? map(rs) : null;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi findById: " + e.getMessage(), e);
+        }
+    }
+
     public List<Course> searchCourse(String keyword) {
         List<Course> list = new ArrayList<>();
         String sql = "SELECT * FROM tblCourse WHERE id ILIKE ? OR name ILIKE ? ORDER BY id";
@@ -75,6 +88,31 @@ public class CourseDAO extends DAO {
             throw new RuntimeException("Lỗi searchCourse: " + e.getMessage(), e);
         }
         return list;
+    }
+
+    public boolean updateCourse(Course c) {
+        String sql = "UPDATE tblCourse SET credits = ?, name = ?, department = ? WHERE id = ?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, c.getCredits());
+            ps.setString(2, c.getName());
+            ps.setString(3, c.getDepartment());
+            ps.setString(4, c.getId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi updateCourse: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean deleteCourse(String id) {
+        String sql = "DELETE FROM tblCourse WHERE id = ?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi deleteCourse: " + e.getMessage(), e);
+        }
     }
 
     /** Tra cứu học phần mở đăng ký (Chương 4.3.2.6). */

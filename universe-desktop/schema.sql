@@ -143,10 +143,10 @@ CREATE TABLE tblNotification (
 -- Users (password plaintext theo seed data báo cáo - T08)
 INSERT INTO tblUser (id, fullName, dob, gender, phone, username, password, status, role, email) VALUES
   ('A01', 'Quản Trị Viên',     '1990-01-01', 'Male',   '0900000000', 'admin',      '123456', 'active', 'Admin',    'admin@universe'),
-  ('GV01','Đỗ Thị Liên',        '1985-05-20', 'Female', '0911111111', 'dothilien',  '123456', 'active', 'Lecturer', 'lien@universe'),
-  ('S01', 'Nguyễn Bá Hùng',     '2005-03-17', 'Male',   '0987654321', 'b23dcat120', '123456', 'active', 'Student',  'hung@stu.universe'),
-  ('S02', 'Trần Xuân Thành',    '2005-06-02', 'Male',   '0987654322', 'b23dcat280', '123456', 'active', 'Student',  'thanh@stu.universe'),
-  ('S03', 'Phạm Thị Thiên Hà',  '2005-09-10', 'Female', '0987654323', 'b23dccn266', '123456', 'active', 'Student',  'ha@stu.universe');
+  ('GV01','Đỗ Thị Liên',        '1985-05-20', 'Female', '0911111111', 'lecturer',  '123456', 'active', 'Lecturer', 'lien@universe'),
+  ('S01', 'Nguyễn Bá Hùng',     '2005-03-17', 'Male',   '0987654321', 'student', '123456', 'active', 'Student',  'hung@stu.universe'),
+  ('S02', 'Trần Xuân Thành',    '2005-06-02', 'Male',   '0987654322', 'student2', '123456', 'active', 'Student',  'thanh@stu.universe'),
+  ('S03', 'Phạm Thị Thiên Hà',  '2005-09-10', 'Female', '0987654323', 'student3', '123456', 'active', 'Student',  'ha@stu.universe');
 
 INSERT INTO tblAdmin    (id, department)                  VALUES ('A01', 'Phòng Đào tạo');
 INSERT INTO tblLecturer (id, department, degree)          VALUES ('GV01', 'Công nghệ Thông tin', 'Tiến sĩ');

@@ -20,6 +20,12 @@ public class CourseRecordDAO extends DAO {
 
     /** Ghi nhận bản ghi đăng ký mới (Chương 4.3.2.6). */
     public boolean confirmRegistration(CourseRecord r) {
+        if (exists(r.getStudentId(), r.getClassSectionId())) {
+            return false;
+        }
+        if (r.getId() == null || r.getId().isBlank()) {
+            r.setId("CR" + Long.toString(System.nanoTime(), 36).toUpperCase());
+        }
         String sql = "INSERT INTO tblCourseRecord (id, enrolledAt, status, tblStudentid, tblClassSectionid) " +
                      "VALUES (?, ?, ?, ?, ?)";
         try (Connection con = getConnection();

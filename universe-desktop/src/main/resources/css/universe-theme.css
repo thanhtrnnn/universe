@@ -1,0 +1,596 @@
+/* ═══════════════════════════════════════════════════════════════
+   UniVerse Desktop – Universe / Galaxy Theme
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Root Variables ─────────────────────────────────────────── */
+.root {
+    -fx-font-family: "Inter", "Segoe UI", "Noto Sans", sans-serif;
+    -fx-font-size: 14px;
+
+    /* Palette */
+    -ux-bg-primary:    #070B1A; /* Deep Space Black-Blue */
+    -ux-bg-secondary:  #10172F; /* Lighter Space */
+    -ux-surface:       rgba(255, 255, 255, 0.06); /* Glass Card */
+    -ux-surface-hover: rgba(255, 255, 255, 0.10);
+
+    -ux-text-main:     #F4F7FF; /* White-blue */
+    -ux-text-sub:      #A8B3CF; /* Light gray-blue */
+    -ux-text-dim:      #6F7A99; /* Dim gray */
+
+    -ux-accent-cyan:   #00D4FF;
+    -ux-accent-blue:   #4D7CFF;
+    -ux-accent-violet: #8B5CF6;
+    -ux-accent-pink:   #E879F9;
+
+    -ux-border:        rgba(255, 255, 255, 0.12);
+    -ux-border-focus:  #00D4FF;
+
+    -ux-success:       #22C55E;
+    -ux-warning:       #FACC15;
+    -ux-danger:        #FB7185;
+
+    /* Overlays for dark theme */
+    -ux-overlay-2:     rgba(255, 255, 255, 0.02);
+    -ux-overlay-4:     rgba(255, 255, 255, 0.04);
+    -ux-overlay-10:    rgba(255, 255, 255, 0.10);
+    -ux-overlay-15:    rgba(255, 255, 255, 0.15);
+    -ux-shadow-color:  rgba(0, 212, 255, 0.05);
+
+    -fx-background-color: -ux-bg-primary;
+    -fx-text-fill: -ux-text-main;
+}
+
+/* ── Light Theme Overrides for Content Area / Dialogs ── */
+.content-area,
+.form-dialog {
+    -ux-bg-primary:    #F4F6F8;
+    -ux-bg-secondary:  #FFFFFF;
+    -ux-surface:       #FFFFFF;
+    -ux-surface-hover: #F8FAFC;
+
+    -ux-text-main:     #0F172A;
+    -ux-text-sub:      #475569;
+    -ux-text-dim:      #94A3B8;
+
+    -ux-accent-cyan:   #0284C7;
+    -ux-accent-blue:   #2563EB;
+    -ux-accent-violet: #7C3AED;
+    -ux-accent-pink:   #DB2777;
+
+    -ux-border:        #CBD5E1;
+    -ux-border-focus:  #0284C7;
+
+    /* Overlays for light theme */
+    -ux-overlay-2:     rgba(0, 0, 0, 0.02);
+    -ux-overlay-4:     rgba(0, 0, 0, 0.04);
+    -ux-overlay-10:    rgba(0, 0, 0, 0.08);
+    -ux-overlay-15:    rgba(0, 0, 0, 0.12);
+    -ux-shadow-color:  rgba(0, 0, 0, 0.06);
+
+    -fx-background-color: -ux-bg-primary;
+}
+
+.form-dialog {
+    -fx-background-color: #F8FAFC;
+    -fx-padding: 28;
+}
+
+/* ── Typography Classes ─────────────────────────────────────── */
+.label { -fx-text-fill: -ux-text-main; }
+
+.app-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ux-text-main;
+    -fx-padding: 0 0 10 0;
+}
+
+.section-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ux-text-main;
+}
+
+.section-kicker {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ux-accent-cyan;
+    -fx-letter-spacing: 0.1em;
+    -fx-text-transform: uppercase;
+}
+
+.body-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: -ux-text-sub;
+    -fx-line-spacing: 0.4em;
+}
+
+.caption-text {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ux-text-sub;
+    -fx-font-weight: 600;
+}
+
+.location-status {
+    -fx-font-size: 12px;
+    -fx-text-fill: -ux-text-sub;
+    -fx-line-spacing: 0.2em;
+}
+
+.location-status-info {
+    -fx-text-fill: -ux-accent-blue;
+}
+
+.location-status-success {
+    -fx-text-fill: -ux-success;
+}
+
+.location-status-error {
+    -fx-text-fill: -ux-danger;
+}
+
+.content-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ux-text-main;
+}
+
+.label-subtitle {
+    -fx-font-size: 14px;
+    -fx-text-fill: -ux-text-sub;
+}
+
+.metric-number {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ux-accent-cyan;
+}
+
+.metric-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -ux-text-sub;
+    -fx-text-transform: uppercase;
+}
+
+/* ── Cards / Panels ─────────────────────────────────────────── */
+.card {
+    -fx-background-color: -ux-surface;
+    -fx-background-radius: 18;
+    -fx-border-color: -ux-border;
+    -fx-border-radius: 18;
+    -fx-border-width: 1;
+    -fx-padding: 24;
+    -fx-effect: dropshadow(gaussian, -ux-shadow-color, 10, 0, 0, 4);
+}
+.card:hover {
+    -fx-translate-y: -2px;
+    -fx-border-color: rgba(255, 255, 255, 0.2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 212, 255, 0.1), 16, 0, 0, 6);
+}
+
+.card-login {
+    -fx-background-color: -ux-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -ux-border;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-padding: 48;
+}
+
+.stat-card {
+    -fx-background-color: -ux-surface;
+    -fx-background-radius: 16;
+    -fx-border-color: -ux-border;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, -ux-shadow-color, 8, 0, 0, 2);
+}
+.stat-card:hover {
+    -fx-translate-y: -2px;
+    -fx-border-color: -ux-accent-cyan;
+}
+
+/* ── Form Fields ────────────────────────────────────────────── */
+.text-field, .password-field {
+    -fx-background-color: -ux-bg-secondary;
+    -fx-background-radius: 8;
+    -fx-border-color: -ux-border;
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-text-fill: -ux-text-main;
+    -fx-prompt-text-fill: -ux-text-dim;
+    -fx-padding: 12 16;
+    -fx-font-size: 14px;
+}
+.text-field:focused, .password-field:focused {
+    -fx-border-color: -ux-accent-cyan;
+    -fx-effect: dropshadow(gaussian, rgba(0, 212, 255, 0.2), 4, 0, 0, 0);
+}
+
+.text-area {
+    -fx-background-color: -ux-bg-secondary;
+    -fx-text-fill: -ux-text-main;
+    -fx-prompt-text-fill: -ux-text-dim;
+    -fx-border-color: -ux-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 2;
+}
+.text-area .content {
+    -fx-background-color: -ux-bg-secondary;
+    -fx-background-radius: 8;
+}
+.text-area:focused {
+    -fx-border-color: -ux-accent-cyan;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn-primary {
+    -fx-background-color: linear-gradient(to right, -ux-accent-cyan, -ux-accent-blue);
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-background-radius: 12;
+    -fx-padding: 12 24;
+    -fx-cursor: hand;
+    -fx-wrap-text: true;
+
+}
+.btn-primary:hover {
+    -fx-background-color: linear-gradient(to right, #2BE0FF, #6A90FF);
+    -fx-effect: dropshadow(gaussian, rgba(0, 212, 255, 0.3), 8, 0, 0, 2);
+}
+.btn-primary:pressed {
+    -fx-scale-x: 0.98;
+    -fx-scale-y: 0.98;
+}
+.btn-secondary {
+    -fx-background-color: -ux-surface;
+    -fx-text-fill: -ux-text-main;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12;
+    -fx-border-color: -ux-border;
+    -fx-border-radius: 12;
+    -fx-padding: 12 24;
+    -fx-cursor: hand;
+    -fx-wrap-text: true;
+
+}
+.btn-secondary:hover {
+    -fx-background-color: -ux-surface-hover;
+    -fx-border-color: -ux-text-sub;
+}
+.btn-accent {
+    -fx-background-color: rgba(251, 113, 133, 0.2);
+    -fx-text-fill: -ux-danger;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(251, 113, 133, 0.4);
+    -fx-border-radius: 12;
+    -fx-padding: 12 24;
+    -fx-cursor: hand;
+    -fx-wrap-text: true;
+
+}
+.btn-accent:hover {
+    -fx-background-color: rgba(251, 113, 133, 0.4);
+}
+.btn-danger {
+    -fx-background-color: #E11D48;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 12;
+    -fx-padding: 12 24;
+    -fx-cursor: hand;
+    -fx-wrap-text: true;
+
+}
+.btn-danger:hover {
+    -fx-background-color: #BE123C;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.sidebar {
+    -fx-background-color: rgba(10, 15, 36, 0.85); /* Semi-transparent dark */
+    -fx-border-color: -ux-border;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 32 0 0 0;
+    -fx-min-width: 240;
+    -fx-pref-width: 240;
+}
+.sidebar-brand {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -ux-text-main;
+    -fx-padding: 0 0 8 0;
+}
+.sidebar-role {
+    -fx-font-size: 11px;
+    -fx-text-fill: -ux-accent-cyan;
+    -fx-letter-spacing: 0.1em;
+    -fx-text-transform: uppercase;
+    -fx-padding: 0 0 24 0;
+}
+.sidebar-btn {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ux-text-sub;
+    -fx-font-size: 14px;
+    -fx-padding: 14 24;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+    -fx-wrap-text: true;
+
+}
+.sidebar-btn:hover {
+    -fx-background-color: -ux-surface;
+    -fx-text-fill: -ux-text-main;
+}
+.sidebar-btn-active {
+    -fx-background-color: linear-gradient(to right, rgba(0, 212, 255, 0.15), transparent);
+    -fx-text-fill: -ux-accent-cyan;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-padding: 14 24;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+    -fx-border-color: transparent transparent transparent -ux-accent-cyan;
+    -fx-border-width: 0 0 0 4;
+    -fx-wrap-text: true;
+
+}
+.sidebar-logout {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ux-text-dim;
+    -fx-font-size: 13px;
+    -fx-padding: 16 24;
+    -fx-alignment: CENTER_LEFT;
+    -fx-cursor: hand;
+    -fx-border-color: -ux-border transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+.sidebar-logout:hover {
+    -fx-text-fill: -ux-danger;
+    -fx-background-color: rgba(251, 113, 133, 0.1);
+}
+
+/* ── Table View ─────────────────────────────────────────────── */
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-cell-size: 48;
+}
+.table-view .column-header-background {
+    -fx-background-color: -ux-overlay-4;
+    -fx-border-color: transparent transparent -ux-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+.table-view .column-header-background .label {
+    -fx-text-fill: -ux-text-sub;
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-text-transform: uppercase;
+    -fx-padding: 16;
+}
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.table-row-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -ux-overlay-10 transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-min-height: 48px; /* ENSURE SUFFICIENT ROW HEIGHT */
+}
+.table-row-cell:odd {
+    -fx-background-color: -ux-overlay-2;
+}
+.table-row-cell:hover {
+    -fx-background-color: rgba(0, 212, 255, 0.05);
+}
+.table-row-cell:selected {
+    -fx-background-color: rgba(0, 212, 255, 0.1);
+    -fx-border-color: transparent transparent -ux-accent-cyan transparent;
+}
+.table-cell {
+    -fx-text-fill: -ux-text-main;
+    -fx-padding: 0 16;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER_LEFT;
+}
+.table-view .filler {
+    -fx-background-color: transparent;
+}
+
+/* ── Badges ─────────────────────────────────────────────────── */
+.badge {
+    -fx-padding: 6 12;
+    -fx-background-radius: 12;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-transform: uppercase;
+}
+.badge-success {
+    -fx-background-color: rgba(34, 197, 94, 0.15);
+    -fx-text-fill: -ux-success;
+}
+.badge-warning {
+    -fx-background-color: rgba(250, 204, 21, 0.15);
+    -fx-text-fill: -ux-warning;
+}
+.badge-danger {
+    -fx-background-color: rgba(251, 113, 133, 0.15);
+    -fx-text-fill: -ux-danger;
+}
+.badge-neutral {
+    -fx-background-color: -ux-overlay-10;
+    -fx-text-fill: -ux-text-sub;
+}
+
+/* ── ComboBox ───────────────────────────────────────────────── */
+.combo-box {
+    -fx-background-color: -ux-bg-secondary;
+    -fx-border-color: -ux-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 4 8;
+}
+.combo-box:focused {
+    -fx-border-color: -ux-border-focus;
+}
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -ux-text-main;
+    -fx-padding: 8 10;
+}
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+.combo-box .arrow {
+    -fx-background-color: -ux-text-sub;
+}
+.combo-box-popup .list-view {
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #CBD5E1;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(15, 23, 42, 0.18), 14, 0, 0, 5);
+}
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: #FFFFFF;
+    -fx-text-fill: #0F172A;
+    -fx-padding: 10 16;
+}
+.combo-box-popup .list-view .list-cell:filled:hover {
+    -fx-background-color: #E0F2FE;
+    -fx-text-fill: #075985;
+}
+.combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-background-color: #0284C7;
+    -fx-text-fill: #FFFFFF;
+}
+
+/* ── DatePicker ─────────────────────────────────────────────── */
+.date-picker {
+    -fx-background-color: -ux-bg-secondary;
+    -fx-border-color: -ux-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+.date-picker:focused {
+    -fx-border-color: -ux-border-focus;
+}
+.date-picker > .text-field {
+    -fx-border-color: transparent;
+    -fx-background-color: transparent;
+}
+.date-picker > .arrow-button {
+    -fx-background-color: transparent;
+}
+.date-picker > .arrow-button > .arrow {
+    -fx-background-color: -ux-text-sub;
+}
+
+/* ── ScrollPane ─────────────────────────────────────────────── */
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+.form-scroll,
+.content-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.scroll-bar:vertical, .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+.scroll-bar .thumb {
+    -fx-background-color: -ux-overlay-15;
+    -fx-background-radius: 4;
+}
+.scroll-bar .thumb:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+}
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+/* ── Charts ─────────────────────────────────────────────────── */
+.chart {
+    -fx-padding: 10;
+}
+.chart-plot-background {
+    -fx-background-color: transparent;
+}
+.chart-vertical-grid-lines, .chart-horizontal-grid-lines {
+    -fx-stroke: -ux-overlay-10;
+    -fx-stroke-dash-array: 4 4;
+}
+.chart-alternative-row-fill, .chart-alternative-column-fill {
+    -fx-fill: transparent;
+}
+.chart-series-line {
+    -fx-stroke: -ux-accent-cyan;
+    -fx-stroke-width: 3px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 212, 255, 0.5), 8, 0, 0, 0);
+}
+.chart-line-symbol {
+    -fx-background-color: -ux-accent-violet, -ux-accent-cyan;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 5px;
+    -fx-padding: 4px;
+}
+.axis-label {
+    -fx-text-fill: -ux-text-sub;
+    -fx-font-size: 11px;
+}
+.axis-tick-mark {
+    -fx-stroke: transparent;
+}
+.axis-minor-tick-mark {
+    -fx-stroke: transparent;
+}
+.axis {
+    -fx-tick-label-fill: -ux-text-sub;
+}
+
+/* ── Separator ──────────────────────────────────────────────── */
+.separator .line {
+    -fx-border-color: -ux-border;
+    -fx-border-width: 1 0 0 0;
+}
+
+.content-area {
+    -fx-padding: 40;
+}
+
+.form-dialog .section-title,
+.form-dialog .app-title {
+    -fx-text-fill: #0F172A;
+}
+
+.form-dialog .text-field:disabled {
+    -fx-opacity: 0.8;
+    -fx-background-color: #E2E8F0;
+}
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.list-cell {
+    -fx-text-fill: -ux-text-main;
+}

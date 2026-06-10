@@ -14,6 +14,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
@@ -21,36 +22,35 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-/**
- * Popup sửa hồ sơ người dùng. Vai trò được giữ cố định để bảo toàn các quan hệ
- * RBAC và dữ liệu học tập đã liên kết với tài khoản.
- */
-public class EditUserFrm extends Stage {
+public class AddUserFrm extends Stage {
 
-    private final User user;
     private final UserDAO userDAO = new UserDAO();
     private final Runnable onSaved;
 
+    private final TextField inId = new TextField();
     private final TextField inFullName = new TextField();
     private final DatePicker inDob = new DatePicker();
     private final ComboBox<String> inGender = new ComboBox<>(
             FXCollections.observableArrayList("Male", "Female", "Other"));
+    private final TextField inUsername = new TextField();
+    private final PasswordField inPassword = new PasswordField();
     private final TextField inPhone = new TextField();
     private final TextField inEmail = new TextField();
-    private final TextField inRole = new TextField();
+    private final ComboBox<String> inRole = new ComboBox<>(
+            FXCollections.observableArrayList("Student", "Lecturer", "Admin"));
     private final ComboBox<String> inStatus = new ComboBox<>(
             FXCollections.observableArrayList("active", "inactive"));
 
+    private final VBox roleFields = new VBox(12);
     private final TextField inDepartment = new TextField();
     private final TextField inDegree = new TextField();
     private final TextField inCourse = new TextField();
     private final TextField inMajor = new TextField();
     private final TextField inClassName = new TextField();
 
-    public EditUserFrm(User user, Runnable onSaved) {
-        this.user = user;
+    public AddUserFrm(Runnable onSaved) {
         this.onSaved = onSaved;
-        setTitle("Chỉnh sửa người dùng");
+        setTitle("Thêm người dùng mới");
         initModality(Modality.APPLICATION_MODAL);
         buildUI();
     }
@@ -59,34 +59,36 @@ public class EditUserFrm extends Stage {
         VBox root = new VBox(20);
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label title = new Label("Sửa thông tin người dùng");
+        Label title = new Label("Thêm người dùng mới");
         title.getStyleClass().add("section-title");
 
-        Label account = new Label(user.getId() + " - " + user.getUsername());
-        account.getStyleClass().add("body-text");
+        Label guide = new Label("Nhập thông tin tài khoản và thông tin hồ sơ theo vai trò.");
+        guide.getStyleClass().add("body-text");
+        guide.setWrapText(true);
 
         VBox form = new VBox(12);
-        inFullName.setText(user.getFullName());
-        inDob.setValue(user.getDob());
-        inGender.setValue(user.getGender());
-        inPhone.setText(user.getPhone());
-        inEmail.setText(user.getEmail());
-        inRole.setText(user.getRole());
-        inRole.setDisable(true);
-        inStatus.setValue(user.getStatus() == null ? "active" : user.getStatus().toLowerCase());
+
+        inRole.setValue("Student");
+        inStatus.setValue("active");
+        inGender.setValue("Male");
+        inRole.valueProperty().addListener((obs, oldRole, newRole) -> updateRoleFields());
 
         form.getChildren().addAll(
+                createFormRow("Mã người dùng", inId),
                 createFormRow("Họ và tên", inFullName),
                 createFormRow("Ngày sinh", inDob),
                 createFormRow("Giới tính", inGender),
+                createFormRow("Tên đăng nhập", inUsername),
+                createFormRow("Mật khẩu", inPassword),
                 createFormRow("Số điện thoại", inPhone),
                 createFormRow("Email", inEmail),
                 createFormRow("Vai trò", inRole),
-                createFormRow("Trạng thái", inStatus)
+                createFormRow("Trạng thái", inStatus),
+                roleFields
         );
-        addRoleFields(form);
+        updateRoleFields();
 
-        Button btnSave = new Button("Lưu thay đổi");
+        Button btnSave = new Button("Thêm người dùng");
         btnSave.getStyleClass().add("btn-primary");
         btnSave.setOnAction(e -> save());
 
@@ -98,28 +100,22 @@ public class EditUserFrm extends Stage {
         actions.setAlignment(Pos.CENTER_RIGHT);
         actions.setPadding(new Insets(16, 0, 0, 0));
 
-        root.getChildren().addAll(title, account, form, actions);
+        root.getChildren().addAll(title, guide, form, actions);
 
-        Scene scene = FxHelper.createFormScene(root, 720);
+        Scene scene = FxHelper.createFormScene(root, 760);
         setScene(scene);
         setMinWidth(560);
     }
 
-    private void addRoleFields(VBox form) {
-        if (user instanceof Admin admin) {
-            inDepartment.setText(admin.getDepartment());
-            form.getChildren().add(createFormRow("Phòng ban", inDepartment));
-        } else if (user instanceof Lecturer lecturer) {
-            inDepartment.setText(lecturer.getDepartment());
-            inDegree.setText(lecturer.getDegree());
-            form.getChildren().addAll(
+    private void updateRoleFields() {
+        roleFields.getChildren().clear();
+        switch (inRole.getValue()) {
+            case "Admin" ->
+                    roleFields.getChildren().add(createFormRow("Phòng ban", inDepartment));
+            case "Lecturer" -> roleFields.getChildren().addAll(
                     createFormRow("Khoa / Bộ môn", inDepartment),
                     createFormRow("Học vị", inDegree));
-        } else if (user instanceof Student student) {
-            inCourse.setText(student.getCourse());
-            inMajor.setText(student.getMajor());
-            inClassName.setText(student.getClassName());
-            form.getChildren().addAll(
+            default -> roleFields.getChildren().addAll(
                     createFormRow("Khóa học", inCourse),
                     createFormRow("Ngành đào tạo", inMajor),
                     createFormRow("Lớp hành chính", inClassName));
@@ -136,41 +132,53 @@ public class EditUserFrm extends Stage {
     }
 
     private void save() {
-        if (inFullName.getText().isBlank()) {
-            FxHelper.showWarning("Họ và tên không được để trống.");
+        if (inId.getText().isBlank() || inFullName.getText().isBlank()
+                || inUsername.getText().isBlank() || inPassword.getText().isBlank()) {
+            FxHelper.showWarning("Vui lòng nhập mã, họ tên, tên đăng nhập và mật khẩu.");
             return;
         }
 
+        User user = createUserByRole();
+        user.setId(inId.getText().trim());
         user.setFullName(inFullName.getText().trim());
         user.setDob(inDob.getValue());
         user.setGender(inGender.getValue());
+        user.setUsername(inUsername.getText().trim());
+        user.setPassword(inPassword.getText());
         user.setPhone(inPhone.getText().trim());
         user.setEmail(inEmail.getText().trim());
+        user.setRole(inRole.getValue());
         user.setStatus(inStatus.getValue());
 
-        if (user instanceof Admin admin) {
-            admin.setDepartment(inDepartment.getText().trim());
-        } else if (user instanceof Lecturer lecturer) {
-            lecturer.setDepartment(inDepartment.getText().trim());
-            lecturer.setDegree(inDegree.getText().trim());
-        } else if (user instanceof Student student) {
-            student.setCourse(inCourse.getText().trim());
-            student.setMajor(inMajor.getText().trim());
-            student.setClassName(inClassName.getText().trim());
-        }
-
         try {
-            if (userDAO.updateUser(user)) {
-                FxHelper.showInfo("Cập nhật người dùng thành công.");
+            if (userDAO.insertUser(user)) {
+                FxHelper.showInfo("Thêm người dùng thành công.");
                 if (onSaved != null) {
                     onSaved.run();
                 }
                 close();
-            } else {
-                FxHelper.showError("Không tìm thấy người dùng cần cập nhật.");
             }
         } catch (RuntimeException ex) {
-            FxHelper.showError("Cập nhật thất bại: " + ex.getMessage());
+            FxHelper.showError("Không thể thêm người dùng. ID hoặc tên đăng nhập có thể đã tồn tại.");
         }
+    }
+
+    private User createUserByRole() {
+        if ("Admin".equals(inRole.getValue())) {
+            Admin admin = new Admin();
+            admin.setDepartment(inDepartment.getText().trim());
+            return admin;
+        }
+        if ("Lecturer".equals(inRole.getValue())) {
+            Lecturer lecturer = new Lecturer();
+            lecturer.setDepartment(inDepartment.getText().trim());
+            lecturer.setDegree(inDegree.getText().trim());
+            return lecturer;
+        }
+        Student student = new Student();
+        student.setCourse(inCourse.getText().trim());
+        student.setMajor(inMajor.getText().trim());
+        student.setClassName(inClassName.getText().trim());
+        return student;
     }
 }

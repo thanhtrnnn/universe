@@ -7,110 +7,170 @@ import com.universe.entity.Course;
 import com.universe.entity.CourseRecord;
 import com.universe.entity.User;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+
 import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Giao diện đăng ký lớp học phần (Chương 4.3.2.6, bước 14-end).
- * getListClassSectionRegistration() → checkCapacity() → registerClassSection()
- * → CourseRecordDAO.confirmRegistration().
+ * Giao diện đăng ký lớp học phần (ClassSectionRegistrationFrm).
  */
-public class ClassSectionRegistrationFrm extends JFrame implements ActionListener {
+public class ClassSectionRegistrationFrm extends VBox {
 
     private final User currentUser;
     private final Course course;
     private final ClassSectionDAO classSectionDAO = new ClassSectionDAO();
-    private final CourseRecordDAO courseRecordDAO = new CourseRecordDAO();
+    private final CourseRecordDAO recordDAO = new CourseRecordDAO();
 
-    private final JButton subChoose = new JButton("Đăng ký lớp đã chọn");
-    private final JTable tblClass;
-    private final DefaultTableModel model;
-
-    private List<ClassSection> classList;
+    private final TableView<ClassSection> tblClass = new TableView<>();
+    private final ObservableList<ClassSection> data = FXCollections.observableArrayList();
 
     public ClassSectionRegistrationFrm(User currentUser, Course course) {
         this.currentUser = currentUser;
         this.course = course;
-        setTitle("Đăng ký lớp học phần - " + course.getName());
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(680, 420);
-        setLocationRelativeTo(null);
-
-        model = new DefaultTableModel(
-                new Object[]{"Mã lớp", "Tên lớp", "Học kỳ", "Sĩ số tối đa", "Trạng thái"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        tblClass = new JTable(model);
-
         buildUI();
-        loadClassSections();
+        loadData();
     }
 
+    @SuppressWarnings("unchecked")
     private void buildUI() {
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        top.add(new JLabel("Các lớp học phần của: " + course.getName()));
+        setSpacing(24);
 
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottom.add(subChoose);
-        subChoose.addActionListener(this);
+        Label title = new Label("Lớp Học phần: " + course.getName());
+        title.getStyleClass().add("app-title");
+        Label subtitle = new Label("CHỌN LỚP ĐỂ ĐĂNG KÝ MÔN " + course.getId());
+        subtitle.getStyleClass().add("section-kicker");
+        VBox header = new VBox(8, subtitle, title);
 
-        setLayout(new BorderLayout());
-        add(top, BorderLayout.NORTH);
-        add(new JScrollPane(tblClass), BorderLayout.CENTER);
-        add(bottom, BorderLayout.SOUTH);
+        // ── Controls ──
+        HBox controls = new HBox(16);
+        controls.setAlignment(Pos.CENTER_LEFT);
+
+        Button btnBack = new Button("🡠 Quay lại");
+        btnBack.getStyleClass().add("btn-secondary");
+        btnBack.setOnAction(e -> back());
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button btnRegister = new Button("Xác nhận đăng ký");
+        btnRegister.getStyleClass().add("btn-primary");
+        btnRegister.setOnAction(e -> registerClass());
+
+        controls.getChildren().addAll(btnBack, spacer, btnRegister);
+
+        // ── Table ──
+        VBox tableCard = new VBox();
+        tableCard.getStyleClass().add("card");
+        VBox.setVgrow(tableCard, Priority.ALWAYS);
+
+        TableColumn<ClassSection, String> colClassId = new TableColumn<>("Mã Lớp");
+        colClassId.setCellValueFactory(new PropertyValueFactory<>("classId"));
+        colClassId.setPrefWidth(120);
+
+        TableColumn<ClassSection, String> colName = new TableColumn<>("Tên Lớp");
+        colName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colName.setPrefWidth(220);
+
+        TableColumn<ClassSection, Integer> colMax = new TableColumn<>("Sĩ số tối đa");
+        colMax.setCellValueFactory(new PropertyValueFactory<>("maxStudents"));
+        colMax.setPrefWidth(100);
+
+        TableColumn<ClassSection, String> colLecturer = new TableColumn<>("Giảng viên");
+        colLecturer.setCellValueFactory(new PropertyValueFactory<>("lecturerId"));
+        colLecturer.setPrefWidth(150);
+
+        TableColumn<ClassSection, String> colStatus = new TableColumn<>("Trạng thái");
+        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
+        colStatus.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setGraphic(null);
+                } else {
+                    String statusClass = item.equalsIgnoreCase("open") ? "success" : "danger";
+                    setGraphic(FxHelper.createBadge(item, statusClass));
+                }
+            }
+        });
+        colStatus.setPrefWidth(100);
+
+        tblClass.getColumns().addAll(colClassId, colName, colMax, colLecturer, colStatus);
+        tblClass.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblClass.setPlaceholder(new Label("Học phần này hiện chưa có lớp nào mở."));
+        tblClass.setItems(data);
+
+        tblClass.setRowFactory(tv -> {
+            TableRow<ClassSection> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (!row.isEmpty())) {
+                    registerClass();
+                }
+            });
+            return row;
+        });
+
+        VBox.setVgrow(tblClass, Priority.ALWAYS);
+        tableCard.getChildren().add(tblClass);
+
+        getChildren().addAll(header, controls, tableCard);
     }
 
-    private void loadClassSections() {
-        classList = classSectionDAO.getListClassSectionRegistration(course.getId());
-        model.setRowCount(0);
-        for (ClassSection c : classList) {
-            model.addRow(new Object[]{
-                    c.getClassId(), c.getName(), c.getSemester(), c.getMaxStudents(), c.getStatus()});
+    private void loadData() {
+        List<ClassSection> list = classSectionDAO.getListClassSectionRegistration(course.getId());
+        data.setAll(list);
+    }
+
+    private void back() {
+        if (!FxHelper.replaceContent(this, new SearchCourseRegistrationFrm(currentUser))) {
+            FxHelper.showError("Không thể quay lại danh sách học phần.");
         }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() != subChoose) return;
-
-        int row = tblClass.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một lớp học phần.");
-            return;
-        }
-        ClassSection cls = classList.get(row);
-
-        // checkCapacity
-        if (!classSectionDAO.checkCapacity(cls.getId())) {
-            JOptionPane.showMessageDialog(this, "Lớp học phần đã đầy, vui lòng chọn lớp khác.");
-            return;
-        }
-        // chống đăng ký trùng
-        if (courseRecordDAO.exists(currentUser.getId(), cls.getId())) {
-            JOptionPane.showMessageDialog(this, "Bạn đã đăng ký lớp này rồi.");
+    private void registerClass() {
+        ClassSection selected = tblClass.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            FxHelper.showWarning("Vui lòng chọn một lớp để đăng ký.");
             return;
         }
 
-        // confirmRegistration
-        CourseRecord r = new CourseRecord();
-        r.setId("CR-" + System.nanoTime());
-        r.setEnrolledAt(LocalDate.now());
-        r.setStatus("Registered");
-        r.setStudentId(currentUser.getId());
-        r.setClassSectionId(cls.getId());
+        if (!"open".equalsIgnoreCase(selected.getStatus())) {
+            FxHelper.showError("Lớp này đã đầy hoặc đã đóng đăng ký.");
+            return;
+        }
 
-        boolean ok = courseRecordDAO.confirmRegistration(r);
-        if (ok) {
-            classSectionDAO.registerClassSection(cls.getId());
-            JOptionPane.showMessageDialog(this, "Đăng ký lớp học phần thành công");
-            loadClassSections();
+        if (!classSectionDAO.checkCapacity(selected.getId())) {
+            classSectionDAO.registerClassSection(selected.getId()); // Đóng lớp
+            loadData();
+            FxHelper.showError("Lớp đã đủ sĩ số, hệ thống tự động đóng lớp.");
+            return;
+        }
+
+        CourseRecord record = new CourseRecord(
+                null, LocalDate.now(), "ENROLLED",
+                null, null, null, null,
+                currentUser.getId(), selected.getId()
+        );
+
+        if (recordDAO.confirmRegistration(record)) {
+            classSectionDAO.registerClassSection(selected.getId()); // Cập nhật lại status nếu vừa đầy
+            FxHelper.showInfo("Đăng ký thành công!");
+            loadData();
         } else {
-            JOptionPane.showMessageDialog(this, "Đăng ký thất bại");
+            FxHelper.showError("Đăng ký thất bại. Có thể bạn đã đăng ký lớp này rồi.");
         }
     }
 }

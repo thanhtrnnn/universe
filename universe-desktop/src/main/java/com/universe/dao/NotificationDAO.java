@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -40,10 +41,37 @@ public class NotificationDAO extends DAO {
         }
     }
 
+    /**
+     * Ghi thông báo cho từng người nhận ngay trong CSDL, sau đó phát Kafka nền
+     * để giữ luồng real-time mà không làm treo giao diện khi broker tạm ngắt.
+     */
+    public int sendToRecipients(String title, String content, String recipientType,
+                                List<String> recipientIds) {
+        List<String> uniqueIds = new ArrayList<>(new LinkedHashSet<>(recipientIds));
+        if (uniqueIds.isEmpty()) {
+            return 0;
+        }
+
+        List<Notification> notifications = new ArrayList<>();
+        String baseId = "NTF" + Long.toString(System.nanoTime(), 36).toUpperCase();
+        for (int i = 0; i < uniqueIds.size(); i++) {
+            String id = (baseId + Integer.toString(i, 36).toUpperCase());
+            if (id.length() > 20) {
+                id = id.substring(0, 20);
+            }
+            notifications.add(new Notification(
+                    id, title, content, recipientType, LocalDateTime.now(), uniqueIds.get(i)));
+        }
+
+        insertBatch(notifications);
+        publishInBackground(notifications);
+        return notifications.size();
+    }
+
     /** Ghi thẳng 1 thông báo vào tblNotification (dùng bởi consumer). */
     public boolean insert(Notification n) {
         String sql = "INSERT INTO tblNotification (id, title, content, recipientType, sentAt, tblUserid) " +
-                     "VALUES (?, ?, ?, ?, ?, ?)";
+                     "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING";
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, n.getId());
@@ -80,6 +108,49 @@ public class NotificationDAO extends DAO {
             throw new RuntimeException("Lỗi getNotifications: " + e.getMessage(), e);
         }
         return list;
+    }
+
+    private void insertBatch(List<Notification> notifications) {
+        String sql = "INSERT INTO tblNotification " +
+                "(id, title, content, recipientType, sentAt, tblUserid) " +
+                "VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING";
+        try (Connection con = getConnection()) {
+            con.setAutoCommit(false);
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                for (Notification n : notifications) {
+                    ps.setString(1, n.getId());
+                    ps.setString(2, n.getTitle());
+                    ps.setString(3, n.getContent());
+                    ps.setString(4, n.getRecipientType());
+                    ps.setTimestamp(5, Timestamp.valueOf(n.getSentAt()));
+                    ps.setString(6, n.getUserId());
+                    ps.addBatch();
+                }
+                ps.executeBatch();
+                con.commit();
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi lưu danh sách thông báo: " + e.getMessage(), e);
+        }
+    }
+
+    private void publishInBackground(List<Notification> notifications) {
+        Thread publisher = new Thread(() -> {
+            for (Notification notification : notifications) {
+                try {
+                    KafkaUtil.publish(GSON.toJson(NotificationPayload.from(notification)));
+                } catch (Exception e) {
+                    System.err.println("Không publish được thông báo "
+                            + notification.getId() + ": " + e.getMessage());
+                    break;
+                }
+            }
+        }, "notification-publisher");
+        publisher.setDaemon(true);
+        publisher.start();
     }
 
     /** Parse JSON payload (dùng bởi consumer). */

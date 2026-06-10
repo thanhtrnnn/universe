@@ -52,6 +52,23 @@ public class ClassSectionDAO extends DAO {
         return list;
     }
 
+    public List<ClassSection> getByLecturer(String lecturerId) {
+        List<ClassSection> list = new ArrayList<>();
+        String sql = "SELECT * FROM tblClassSection WHERE tblLecturerid = ? ORDER BY classId";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, lecturerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi getByLecturer: " + e.getMessage(), e);
+        }
+        return list;
+    }
+
     /** Danh sách lớp học phần thuộc một học phần (để đăng ký). */
     public List<ClassSection> getListClassSectionRegistration(String courseId) {
         List<ClassSection> list = new ArrayList<>();
@@ -68,6 +85,25 @@ public class ClassSectionDAO extends DAO {
             throw new RuntimeException("Lỗi getListClassSectionRegistration: " + e.getMessage(), e);
         }
         return list;
+    }
+
+    public boolean insertClassSection(ClassSection c) {
+        String sql = "INSERT INTO tblClassSection (id, classId, name, semester, year, maxStudents, status, tblCourseid, tblLecturerid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, c.getId());
+            ps.setString(2, c.getClassId());
+            ps.setString(3, c.getName());
+            ps.setString(4, c.getSemester());
+            ps.setString(5, c.getYear());
+            ps.setInt(6, c.getMaxStudents());
+            ps.setString(7, c.getStatus());
+            ps.setString(8, c.getCourseId());
+            ps.setString(9, c.getLecturerId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi insertClassSection: " + e.getMessage(), e);
+        }
     }
 
     public boolean updateClassSection(ClassSection c) {
@@ -87,6 +123,17 @@ public class ClassSectionDAO extends DAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi updateClassSection: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean deleteClassSection(String id) {
+        String sql = "DELETE FROM tblClassSection WHERE id = ?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi deleteClassSection: " + e.getMessage(), e);
         }
     }
 

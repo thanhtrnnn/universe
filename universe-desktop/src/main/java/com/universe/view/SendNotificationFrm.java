@@ -4,136 +4,385 @@ import com.universe.dao.ClassSectionDAO;
 import com.universe.dao.NotificationDAO;
 import com.universe.dao.UserDAO;
 import com.universe.entity.ClassSection;
-import com.universe.entity.Notification;
 import com.universe.entity.User;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+
+import java.text.Normalizer;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
- * Giao diện gửi thông báo đến tất cả sinh viên của một lớp (Chương 4.3.2.2).
- * search lớp (ClassSectionDAO) → chọn lớp → nhập title/content →
- * NotificationDAO.sendNotification() (publish Kafka, consumer ghi DB).
+ * Form gửi thông báo với lựa chọn người nhận trực quan thay cho nhập mã tự do.
  */
-public class SendNotificationFrm extends JFrame implements ActionListener {
+public class SendNotificationFrm extends VBox {
+
+    private static final String ALL_USERS = "Tất cả người dùng";
+    private static final String ALL_STUDENTS = "Tất cả sinh viên";
+    private static final String ALL_LECTURERS = "Tất cả giảng viên";
+    private static final String BY_CLASS = "Sinh viên theo lớp học phần";
+    private static final String ONE_USER = "Một người dùng cụ thể";
 
     private final User currentUser;
-    private final ClassSectionDAO classSectionDAO = new ClassSectionDAO();
     private final NotificationDAO notificationDAO = new NotificationDAO();
+    private final ClassSectionDAO classSectionDAO = new ClassSectionDAO();
     private final UserDAO userDAO = new UserDAO();
 
-    private final JTextField inSearch = new JTextField(18);
-    private final JButton subSearch = new JButton("Tìm lớp");
-    private final JTable tblClass;
-    private final DefaultTableModel classModel;
-
-    private final JTextField inTitle = new JTextField(28);
-    private final JTextArea inContent = new JTextArea(5, 28);
-    private final JButton subSend = new JButton("Gửi thông báo");
-
-    private List<ClassSection> classList;
+    private final TextField inTitle = new TextField();
+    private final TextArea inContent = new TextArea();
+    private final ComboBox<String> inAudience = new ComboBox<>();
+    private final TextField inClassSearch = new TextField();
+    private final ComboBox<ClassSection> inClassSection = new ComboBox<>();
+    private final TextField inUserSearch = new TextField();
+    private final ComboBox<User> inUser = new ComboBox<>();
+    private final ObservableList<ClassSection> allClassSections = FXCollections.observableArrayList();
+    private final ObservableList<User> allUsers = FXCollections.observableArrayList();
+    private final FilteredList<ClassSection> filteredClassSections =
+            new FilteredList<>(allClassSections, item -> true);
+    private final FilteredList<User> filteredUsers =
+            new FilteredList<>(allUsers, item -> true);
+    private final VBox classTarget = new VBox(12);
+    private final VBox userTarget = new VBox(12);
+    private final Label recipientSummary = new Label();
 
     public SendNotificationFrm(User currentUser) {
         this.currentUser = currentUser;
-        setTitle("Gửi thông báo");
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(680, 520);
-        setLocationRelativeTo(null);
-
-        classModel = new DefaultTableModel(new Object[]{"Mã lớp", "Tên lớp", "Học kỳ"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        tblClass = new JTable(classModel);
-
         buildUI();
+        loadTargets();
+        updateTargetVisibility();
     }
 
     private void buildUI() {
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        top.add(new JLabel("Tìm lớp:"));
-        top.add(inSearch);
-        top.add(subSearch);
+        setSpacing(24);
+        setMaxWidth(900);
 
-        JPanel form = new JPanel(new GridBagLayout());
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.insets = new Insets(6, 6, 6, 6);
-        gc.anchor = GridBagConstraints.NORTHWEST;
-        gc.gridx = 0; gc.gridy = 0; form.add(new JLabel("Tiêu đề:"), gc);
-        gc.gridx = 1; form.add(inTitle, gc);
-        gc.gridx = 0; gc.gridy = 1; form.add(new JLabel("Nội dung:"), gc);
-        gc.gridx = 1; form.add(new JScrollPane(inContent), gc);
-        gc.gridx = 1; gc.gridy = 2; gc.anchor = GridBagConstraints.EAST; form.add(subSend, gc);
+        Label title = new Label("Gửi Thông báo");
+        title.getStyleClass().add("app-title");
+        Label subtitle = new Label("TẠO VÀ GỬI THÔNG BÁO ĐÚNG ĐỐI TƯỢNG");
+        subtitle.getStyleClass().add("section-kicker");
+        VBox header = new VBox(8, subtitle, title);
 
-        subSearch.addActionListener(this);
-        subSend.addActionListener(this);
-        inSearch.addActionListener(this);
+        VBox formCard = new VBox(18);
+        formCard.getStyleClass().add("card");
 
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                new JScrollPane(tblClass), form);
-        split.setResizeWeight(0.5);
+        inTitle.setPromptText("Ví dụ: Thay đổi phòng học buổi sáng thứ Hai");
+        inContent.setPromptText("Nhập nội dung đầy đủ để người nhận hiểu và có thể hành động...");
+        inContent.setPrefRowCount(7);
+        inContent.setWrapText(true);
 
-        setLayout(new BorderLayout());
-        add(top, BorderLayout.NORTH);
-        add(split, BorderLayout.CENTER);
+        if ("Admin".equalsIgnoreCase(currentUser.getRole())) {
+            inAudience.setItems(FXCollections.observableArrayList(
+                    ALL_USERS, ALL_STUDENTS, ALL_LECTURERS, BY_CLASS, ONE_USER));
+            inAudience.setValue(ALL_USERS);
+        } else {
+            inAudience.setItems(FXCollections.observableArrayList(BY_CLASS, ONE_USER));
+            inAudience.setValue(BY_CLASS);
+        }
+        inAudience.valueProperty().addListener((obs, oldValue, newValue) -> updateTargetVisibility());
+        inClassSection.valueProperty().addListener((obs, oldValue, newValue) -> {
+            if (BY_CLASS.equals(inAudience.getValue())) {
+                updateRecipientSummary();
+            }
+        });
+        inUser.valueProperty().addListener((obs, oldValue, newValue) -> {
+            if (ONE_USER.equals(inAudience.getValue())) {
+                updateRecipientSummary();
+            }
+        });
+        inClassSearch.textProperty().addListener(
+                (obs, oldValue, newValue) -> filterClassSections(newValue));
+        inUserSearch.textProperty().addListener(
+                (obs, oldValue, newValue) -> filterUsers(newValue));
+
+        inClassSearch.setPromptText("Tìm theo mã lớp, tên lớp, học kỳ...");
+        inUserSearch.setPromptText("Tìm theo mã, họ tên, username hoặc email...");
+        inClassSection.setMaxWidth(Double.MAX_VALUE);
+        inUser.setMaxWidth(Double.MAX_VALUE);
+        inClassSection.setItems(filteredClassSections);
+        inUser.setItems(filteredUsers);
+        configureClassSectionCells();
+        configureUserCells();
+
+        classTarget.getChildren().addAll(
+                createFormRow("Tìm lớp học phần", inClassSearch),
+                createFormRow("Chọn lớp học phần", inClassSection));
+        userTarget.getChildren().addAll(
+                createFormRow("Tìm người nhận", inUserSearch),
+                createFormRow("Chọn một người dùng", inUser));
+
+        recipientSummary.getStyleClass().add("body-text");
+        recipientSummary.setWrapText(true);
+
+        Label sender = new Label("Người gửi: " + currentUser.getFullName()
+                + " (" + currentUser.getRole() + ")");
+        sender.getStyleClass().add("caption-text");
+
+        Button btnSend = new Button("Gửi thông báo");
+        btnSend.getStyleClass().add("btn-primary");
+        btnSend.setOnAction(e -> sendNotification());
+
+        HBox actions = new HBox(btnSend);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.setPadding(new Insets(12, 0, 0, 0));
+
+        formCard.getChildren().addAll(
+                createFormRow("Tiêu đề", inTitle),
+                createFormRow("Nội dung", inContent),
+                createFormRow("Đối tượng nhận", inAudience),
+                classTarget,
+                userTarget,
+                recipientSummary,
+                sender,
+                actions
+        );
+        getChildren().addAll(header, formCard);
     }
 
-    private void loadClasses(String keyword) {
-        classList = classSectionDAO.searchClassSection(keyword);
-        classModel.setRowCount(0);
-        for (ClassSection c : classList) {
-            classModel.addRow(new Object[]{c.getClassId(), c.getName(), c.getSemester()});
+    private void loadTargets() {
+        List<ClassSection> classes = "Lecturer".equalsIgnoreCase(currentUser.getRole())
+                ? classSectionDAO.getByLecturer(currentUser.getId())
+                : classSectionDAO.getListClassSection();
+        allClassSections.setAll(classes);
+        filterClassSections(inClassSearch.getText());
+
+        List<User> users = "Lecturer".equalsIgnoreCase(currentUser.getRole())
+                ? userDAO.findStudentsByLecturer(currentUser.getId())
+                : userDAO.searchUser("");
+        users.removeIf(user -> !"active".equalsIgnoreCase(user.getStatus()));
+        users.removeIf(user -> user.getId().equals(currentUser.getId()));
+        allUsers.setAll(users);
+        filterUsers(inUserSearch.getText());
+    }
+
+    private VBox createFormRow(String labelText, Region input) {
+        VBox row = new VBox(7);
+        Label label = new Label(labelText);
+        label.getStyleClass().add("caption-text");
+        input.setMaxWidth(Double.MAX_VALUE);
+        row.getChildren().addAll(label, input);
+        VBox.setVgrow(input, Priority.NEVER);
+        return row;
+    }
+
+    private void updateTargetVisibility() {
+        boolean byClass = BY_CLASS.equals(inAudience.getValue());
+        boolean oneUser = ONE_USER.equals(inAudience.getValue());
+        classTarget.setVisible(byClass);
+        classTarget.setManaged(byClass);
+        userTarget.setVisible(oneUser);
+        userTarget.setManaged(oneUser);
+        updateRecipientSummary();
+    }
+
+    private void updateRecipientSummary() {
+        List<String> ids = resolveRecipientIds();
+        if (BY_CLASS.equals(inAudience.getValue())) {
+            ClassSection selectedClass = inClassSection.getValue();
+            if (selectedClass == null) {
+                recipientSummary.setText(filteredClassSections.isEmpty()
+                        ? "Không tìm thấy lớp học phần phù hợp."
+                        : "Chọn một lớp học phần để gửi thông báo.");
+                return;
+            }
+            recipientSummary.setText("Lớp " + selectedClass.getClassId()
+                    + " có " + ids.size() + " sinh viên sẽ nhận thông báo.");
+            return;
+        }
+        if (ONE_USER.equals(inAudience.getValue())) {
+            User selectedUser = inUser.getValue();
+            if (selectedUser == null) {
+                recipientSummary.setText(filteredUsers.isEmpty()
+                        ? "Không tìm thấy người dùng phù hợp."
+                        : "Chọn một người dùng để gửi thông báo.");
+                return;
+            }
+            recipientSummary.setText("Người nhận: " + formatUser(selectedUser) + ".");
+            return;
+        }
+        recipientSummary.setText("Thông báo sẽ được gửi tới " + ids.size() + " người nhận.");
+    }
+
+    private void filterClassSections(String keyword) {
+        String query = normalizeSearch(keyword);
+        filteredClassSections.setPredicate(classSection -> query.isEmpty()
+                || containsNormalized(classSection.getId(), query)
+                || containsNormalized(classSection.getClassId(), query)
+                || containsNormalized(classSection.getName(), query)
+                || containsNormalized(classSection.getSemester(), query)
+                || containsNormalized(classSection.getYear(), query)
+                || containsNormalized(classSection.getCourseId(), query));
+        keepOrSelectFirst(inClassSection, filteredClassSections);
+    }
+
+    private void filterUsers(String keyword) {
+        String query = normalizeSearch(keyword);
+        filteredUsers.setPredicate(user -> query.isEmpty()
+                || containsNormalized(user.getId(), query)
+                || containsNormalized(user.getFullName(), query)
+                || containsNormalized(user.getUsername(), query)
+                || containsNormalized(user.getEmail(), query)
+                || containsNormalized(user.getRole(), query));
+        keepSelectionOrClear(inUser, filteredUsers);
+        if (ONE_USER.equals(inAudience.getValue()) && inUser.getValue() == null) {
+            updateRecipientSummary();
         }
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
-        if (src == subSearch || src == inSearch) {
-            loadClasses(inSearch.getText().trim());
-        } else if (src == subSend) {
-            sendNotification();
+    private <T> void keepOrSelectFirst(ComboBox<T> comboBox, List<T> filteredItems) {
+        T selected = comboBox.getValue();
+        if (selected != null && filteredItems.contains(selected)) {
+            return;
         }
+        if (filteredItems.isEmpty()) {
+            comboBox.getSelectionModel().clearSelection();
+        } else {
+            comboBox.setValue(filteredItems.get(0));
+        }
+    }
+
+    private <T> void keepSelectionOrClear(ComboBox<T> comboBox, List<T> filteredItems) {
+        T selected = comboBox.getValue();
+        if (selected != null && !filteredItems.contains(selected)) {
+            comboBox.getSelectionModel().clearSelection();
+        }
+    }
+
+    private void configureClassSectionCells() {
+        inClassSection.setCellFactory(list -> createClassSectionCell());
+        inClassSection.setButtonCell(createClassSectionCell());
+    }
+
+    private ListCell<ClassSection> createClassSectionCell() {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(ClassSection item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : formatClassSection(item));
+            }
+        };
+    }
+
+    private void configureUserCells() {
+        inUser.setCellFactory(list -> createUserCell());
+        inUser.setButtonCell(createUserCell());
+    }
+
+    private ListCell<User> createUserCell() {
+        return new ListCell<>() {
+            @Override
+            protected void updateItem(User item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : formatUser(item));
+            }
+        };
+    }
+
+    private String formatClassSection(ClassSection classSection) {
+        String term = String.join(" ",
+                nullToEmpty(classSection.getSemester()),
+                nullToEmpty(classSection.getYear())).trim();
+        return classSection.getClassId() + " - " + classSection.getName()
+                + (term.isEmpty() ? "" : " | " + term);
+    }
+
+    private String formatUser(User user) {
+        String email = nullToEmpty(user.getEmail()).trim();
+        return user.getFullName() + " (" + user.getId() + ")"
+                + (email.isEmpty() ? "" : " - " + email);
+    }
+
+    private boolean containsNormalized(String value, String normalizedQuery) {
+        return normalizeSearch(value).contains(normalizedQuery);
+    }
+
+    private String normalizeSearch(String value) {
+        String normalized = Normalizer.normalize(
+                nullToEmpty(value).trim().toLowerCase(Locale.ROOT),
+                Normalizer.Form.NFD);
+        return normalized.replaceAll("\\p{M}+", "")
+                .replace('đ', 'd');
+    }
+
+    private String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     private void sendNotification() {
-        int row = tblClass.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn một lớp học phần.");
-            return;
-        }
         String title = inTitle.getText().trim();
         String content = inContent.getText().trim();
         if (title.isEmpty() || content.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tiêu đề và nội dung.");
+            FxHelper.showWarning("Vui lòng nhập tiêu đề và nội dung thông báo.");
             return;
         }
 
-        ClassSection cls = classList.get(row);
-        List<String> studentIds = userDAO.findStudentIdsByClassSection(cls.getId());
-        if (studentIds.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Lớp chưa có sinh viên đăng ký.");
+        List<String> recipientIds = resolveRecipientIds();
+        if (recipientIds.isEmpty()) {
+            FxHelper.showWarning("Không tìm thấy người nhận phù hợp.");
             return;
         }
 
         try {
-            for (String sid : studentIds) {
-                Notification n = new Notification();
-                n.setTitle(title);
-                n.setContent(content);
-                n.setRecipientType("class:" + cls.getId());
-                n.setUserId(sid);
-                notificationDAO.sendNotification(n);  // publish Kafka
-            }
-            JOptionPane.showMessageDialog(this,
-                    "Đã gửi thông báo tới " + studentIds.size() + " sinh viên (qua Kafka).");
-            inTitle.setText("");
-            inContent.setText("");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi gửi thông báo: " + ex.getMessage());
+            int sent = notificationDAO.sendToRecipients(
+                    title, content, resolveRecipientType(), recipientIds);
+            FxHelper.showInfo("Đã gửi thông báo tới " + sent + " người nhận.");
+            inTitle.clear();
+            inContent.clear();
+        } catch (RuntimeException ex) {
+            FxHelper.showError("Gửi thông báo thất bại: " + ex.getMessage());
         }
+    }
+
+    private List<String> resolveRecipientIds() {
+        String audience = inAudience.getValue();
+        if (ALL_USERS.equals(audience)) {
+            return userDAO.findActiveUserIds(null);
+        }
+        if (ALL_STUDENTS.equals(audience)) {
+            return userDAO.findActiveUserIds("Student");
+        }
+        if (ALL_LECTURERS.equals(audience)) {
+            return userDAO.findActiveUserIds("Lecturer");
+        }
+        if (BY_CLASS.equals(audience)) {
+            ClassSection selectedClass = inClassSection.getValue();
+            return selectedClass == null
+                    ? Collections.emptyList()
+                    : userDAO.findStudentIdsByClassSection(selectedClass.getId());
+        }
+        User selectedUser = inUser.getValue();
+        return selectedUser == null
+                ? Collections.emptyList()
+                : Collections.singletonList(selectedUser.getId());
+    }
+
+    private String resolveRecipientType() {
+        if (BY_CLASS.equals(inAudience.getValue())) {
+            return "class:" + inClassSection.getValue().getId();
+        }
+        if (ONE_USER.equals(inAudience.getValue())) {
+            return "user:" + inUser.getValue().getId();
+        }
+        if (ALL_STUDENTS.equals(inAudience.getValue())) {
+            return "all-students";
+        }
+        if (ALL_LECTURERS.equals(inAudience.getValue())) {
+            return "all-lecturers";
+        }
+        return "all-users";
     }
 }

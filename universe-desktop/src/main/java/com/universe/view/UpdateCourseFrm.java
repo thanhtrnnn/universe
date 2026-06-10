@@ -15,22 +15,21 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-/**
- * Giao diện thêm mới học phần (CreateCourseFrm).
- */
-public class CreateCourseFrm extends Stage {
+public class UpdateCourseFrm extends Stage {
 
+    private final Course course;
     private final CourseDAO courseDAO = new CourseDAO();
-    private final Runnable onCreated;
+    private final Runnable onSaved;
 
     private final TextField inId = new TextField();
     private final TextField inName = new TextField();
     private final TextField inCredits = new TextField();
     private final TextField inDepartment = new TextField();
 
-    public CreateCourseFrm(Runnable onCreated) {
-        this.onCreated = onCreated;
-        setTitle("Thêm học phần");
+    public UpdateCourseFrm(Course course, Runnable onSaved) {
+        this.course = course;
+        this.onSaved = onSaved;
+        setTitle("Sửa học phần");
         initModality(Modality.APPLICATION_MODAL);
         buildUI();
     }
@@ -40,24 +39,25 @@ public class CreateCourseFrm extends Stage {
         root.setPadding(new Insets(32));
         root.setAlignment(Pos.TOP_LEFT);
 
-        Label title = new Label("Thêm học phần mới");
+        Label title = new Label("Sửa thông tin học phần");
         title.getStyleClass().add("section-title");
 
         VBox form = new VBox(16);
         
-        inId.setPromptText("Ví dụ: INT1340");
-        inName.setPromptText("Tên môn học...");
-        inCredits.setPromptText("Số tín chỉ (1-5)...");
-        inDepartment.setPromptText("Khoa...");
+        inId.setText(course.getId());
+        inId.setDisable(true); // Không cho sửa ID
+        inName.setText(course.getName());
+        inCredits.setText(String.valueOf(course.getCredits()));
+        inDepartment.setText(course.getDepartment());
 
         form.getChildren().addAll(
-                createFormRow("Mã học phần", inId),
+                createFormRow("Mã HP (Không thể sửa)", inId),
                 createFormRow("Tên học phần", inName),
                 createFormRow("Số tín chỉ", inCredits),
                 createFormRow("Khoa quản lý", inDepartment)
         );
 
-        Button btnSave = new Button("Lưu học phần");
+        Button btnSave = new Button("Lưu thay đổi");
         btnSave.getStyleClass().add("btn-primary");
         btnSave.setOnAction(e -> save());
 
@@ -90,36 +90,21 @@ public class CreateCourseFrm extends Stage {
     }
 
     private void save() {
-        String id = inId.getText().trim();
-        String name = inName.getText().trim();
-        String creditsStr = inCredits.getText().trim();
-        String dept = inDepartment.getText().trim();
-
-        if (id.isEmpty() || name.isEmpty() || creditsStr.isEmpty()) {
-            FxHelper.showWarning("Vui lòng nhập đủ thông tin mã, tên và số TC.");
-            return;
-        }
-
+        course.setName(inName.getText().trim());
+        course.setDepartment(inDepartment.getText().trim());
         try {
-            int cred = Integer.parseInt(creditsStr);
-            if (cred <= 0 || cred > 10) throw new NumberFormatException();
+            course.setCredits(Integer.parseInt(inCredits.getText().trim()));
         } catch (NumberFormatException e) {
-            FxHelper.showWarning("Số tín chỉ phải là số nguyên hợp lệ.");
+            FxHelper.showWarning("Số tín chỉ phải là số nguyên!");
             return;
         }
 
-        if (courseDAO.existsById(id)) {
-            FxHelper.showError("Mã học phần đã tồn tại.");
-            return;
-        }
-
-        Course c = new Course(id, Integer.parseInt(creditsStr), name, dept);
-        if (courseDAO.createCourse(c)) {
-            FxHelper.showInfo("Thêm học phần thành công");
-            if (onCreated != null) onCreated.run();
+        if (courseDAO.updateCourse(course)) {
+            FxHelper.showInfo("Sửa học phần thành công");
+            if (onSaved != null) onSaved.run();
             close();
         } else {
-            FxHelper.showError("Thêm học phần thất bại.");
+            FxHelper.showError("Sửa học phần thất bại");
         }
     }
 }

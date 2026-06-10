@@ -10,14 +10,32 @@
     <packaging>jar</packaging>
 
     <name>UniVerse Desktop</name>
-    <description>Hệ thống quản lý đại học số UniVerse - Desktop Client (Java Swing + JDBC + Redis + Kafka)</description>
+    <description>Hệ thống quản lý đại học số UniVerse - Desktop Client (JavaFX + JDBC + Redis + Kafka)</description>
 
     <properties>
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javafx.version>17.0.14</javafx.version>
     </properties>
 
     <dependencies>
+        <!-- JavaFX -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
         <!-- PostgreSQL JDBC driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -62,7 +80,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
-            <version>2.0.13</version>
+            <version>1.7.36</version>
         </dependency>
     </dependencies>
 
@@ -73,6 +91,16 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+            </plugin>
+
+            <!-- JavaFX Maven Plugin - chạy app bằng mvn javafx:run -->
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>com.universe.Main</mainClass>
+                </configuration>
             </plugin>
 
             <!-- exec:java để chạy app / consumer -->
@@ -97,7 +125,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.universe.Main</mainClass>
+                                    <mainClass>com.universe.Launcher</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

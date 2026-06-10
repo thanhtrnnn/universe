@@ -2,135 +2,140 @@ package com.universe.view;
 
 import com.universe.dao.ClassSectionDAO;
 import com.universe.dao.CourseDAO;
+import com.universe.dao.UserDAO;
 import com.universe.entity.ClassSection;
 import com.universe.entity.Course;
+import com.universe.entity.User;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 /**
- * Giao diện cập nhật lớp học phần (Chương 4.3.2.5, bước 12-33).
- * searchCourse() để gán học phần + updateClassSection() lưu thay đổi.
+ * Giao diện sửa Lớp Học phần (UpdateClassSectionFrm).
  */
-public class UpdateClassSectionFrm extends JFrame implements ActionListener {
+public class UpdateClassSectionFrm extends Stage {
 
-    private final ClassSection cls;
-    private final Runnable onSaved;
+    private final ClassSection classSection;
     private final ClassSectionDAO classSectionDAO = new ClassSectionDAO();
     private final CourseDAO courseDAO = new CourseDAO();
+    private final UserDAO userDAO = new UserDAO();
+    private final Runnable onSaved;
 
-    private final JTextField inClassId = new JTextField(14);
-    private final JTextField inName = new JTextField(20);
-    private final JTextField inSemester = new JTextField(10);
-    private final JTextField inYear = new JTextField(10);
-    private final JTextField inMaxStudents = new JTextField(6);
-    private final JComboBox<String> inStatus = new JComboBox<>(new String[]{"open", "full", "closed"});
+    private final TextField inClassId = new TextField();
+    private final TextField inName = new TextField();
+    private final TextField inSemester = new TextField();
+    private final TextField inYear = new TextField();
+    private final TextField inMaxStudents = new TextField();
+    private final ComboBox<String> inStatus = new ComboBox<>(FXCollections.observableArrayList("open", "full", "closed"));
+    private final ComboBox<Course> inCourse = new ComboBox<>();
+    private final ComboBox<User> inLecturer = new ComboBox<>();
 
-    private final JTextField inSearchCourse = new JTextField(12);
-    private final JButton subSearchCourse = new JButton("Tìm học phần");
-    private final JComboBox<Course> cbCourse = new JComboBox<>();
-
-    private final JButton subUpdate = new JButton("Cập nhật");
-
-    public UpdateClassSectionFrm(ClassSection cls, Runnable onSaved) {
-        this.cls = cls;
+    public UpdateClassSectionFrm(ClassSection classSection, Runnable onSaved) {
+        this.classSection = classSection;
         this.onSaved = onSaved;
-        setTitle("Cập nhật lớp học phần - " + cls.getId());
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(480, 420);
-        setLocationRelativeTo(null);
+        setTitle("Chỉnh sửa Lớp học phần");
+        initModality(Modality.APPLICATION_MODAL);
         buildUI();
-        fillData();
     }
 
     private void buildUI() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.insets = new Insets(6, 6, 6, 6);
-        gc.anchor = GridBagConstraints.WEST;
+        VBox root = new VBox(24);
+        root.setPadding(new Insets(32));
+        root.setAlignment(Pos.TOP_LEFT);
 
-        int y = 0;
-        gc.gridx = 0; gc.gridy = y; panel.add(new JLabel("Mã lớp:"), gc);
-        gc.gridx = 1; panel.add(inClassId, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Tên lớp:"), gc);
-        gc.gridx = 1; panel.add(inName, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Học kỳ:"), gc);
-        gc.gridx = 1; panel.add(inSemester, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Năm học:"), gc);
-        gc.gridx = 1; panel.add(inYear, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Sĩ số tối đa:"), gc);
-        gc.gridx = 1; panel.add(inMaxStudents, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Trạng thái:"), gc);
-        gc.gridx = 1; panel.add(inStatus, gc);
+        Label title = new Label("Sửa thông tin lớp học phần");
+        title.getStyleClass().add("section-title");
 
-        JPanel coursePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        coursePanel.add(inSearchCourse);
-        coursePanel.add(subSearchCourse);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Học phần:"), gc);
-        gc.gridx = 1; panel.add(coursePanel, gc);
-        gc.gridx = 1; gc.gridy = ++y; panel.add(cbCourse, gc);
+        VBox form = new VBox(16);
+        
+        inClassId.setText(classSection.getClassId());
+        inName.setText(classSection.getName());
+        inSemester.setText(classSection.getSemester());
+        inYear.setText(classSection.getYear());
+        inMaxStudents.setText(String.valueOf(classSection.getMaxStudents()));
+        inStatus.setValue(classSection.getStatus());
+        inCourse.setItems(FXCollections.observableArrayList(courseDAO.getListCourse()));
+        inLecturer.setItems(FXCollections.observableArrayList(userDAO.findUsersByRole("Lecturer")));
+        inCourse.getItems().stream()
+                .filter(course -> course.getId().equals(classSection.getCourseId()))
+                .findFirst().ifPresent(inCourse::setValue);
+        inLecturer.getItems().stream()
+                .filter(user -> user.getId().equals(classSection.getLecturerId()))
+                .findFirst().ifPresent(inLecturer::setValue);
 
-        gc.gridx = 0; gc.gridy = ++y; gc.gridwidth = 2; gc.anchor = GridBagConstraints.CENTER;
-        panel.add(subUpdate, gc);
+        HBox row1 = new HBox(16, createFormRow("Mã lớp", inClassId), createFormRow("Tên lớp", inName));
+        HBox row2 = new HBox(16, createFormRow("Học kỳ", inSemester), createFormRow("Năm học", inYear));
+        HBox row3 = new HBox(16, createFormRow("Sĩ số tối đa", inMaxStudents), createFormRow("Trạng thái", inStatus));
+        HBox row4 = new HBox(16, createFormRow("Học phần", inCourse), createFormRow("Giảng viên", inLecturer));
 
-        subSearchCourse.addActionListener(this);
-        subUpdate.addActionListener(this);
-        add(panel);
+        form.getChildren().addAll(row1, row2, row3, row4);
+
+        Button btnSave = new Button("Lưu thay đổi");
+        btnSave.getStyleClass().add("btn-primary");
+        btnSave.setOnAction(e -> save());
+
+        Button btnCancel = new Button("Hủy");
+        btnCancel.getStyleClass().add("btn-secondary");
+        btnCancel.setOnAction(e -> close());
+
+        HBox actions = new HBox(12, btnSave, btnCancel);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.setPadding(new Insets(16, 0, 0, 0));
+
+        root.getChildren().addAll(title, form, actions);
+
+        Scene scene = FxHelper.createFormScene(root, 650);
+        setScene(scene);
+        setMinWidth(560);
     }
 
-    private void fillData() {
-        inClassId.setText(cls.getClassId());
-        inName.setText(cls.getName());
-        inSemester.setText(cls.getSemester());
-        inYear.setText(cls.getYear());
-        inMaxStudents.setText(String.valueOf(cls.getMaxStudents()));
-        inStatus.setSelectedItem(cls.getStatus());
-        reloadCourses(courseDAO.getListCourse());
-    }
-
-    private void reloadCourses(List<Course> courses) {
-        cbCourse.removeAllItems();
-        for (Course c : courses) {
-            cbCourse.addItem(c);
-            if (c.getId().equals(cls.getCourseId())) {
-                cbCourse.setSelectedItem(c);
-            }
+    private VBox createFormRow(String labelText, javafx.scene.Node input) {
+        VBox row = new VBox(4);
+        Label lbl = new Label(labelText);
+        lbl.getStyleClass().add("caption-text");
+        
+        if (input instanceof TextField || input instanceof ComboBox) {
+            ((javafx.scene.layout.Region) input).setMaxWidth(Double.MAX_VALUE);
         }
+        
+        row.getChildren().addAll(lbl, input);
+        return row;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
-        if (src == subSearchCourse) {
-            reloadCourses(courseDAO.searchCourse(inSearchCourse.getText().trim()));
-        } else if (src == subUpdate) {
-            try {
-                cls.setClassId(inClassId.getText().trim());
-                cls.setName(inName.getText().trim());
-                cls.setSemester(inSemester.getText().trim());
-                cls.setYear(inYear.getText().trim());
-                cls.setMaxStudents(Integer.parseInt(inMaxStudents.getText().trim()));
-                cls.setStatus((String) inStatus.getSelectedItem());
-                Course selected = (Course) cbCourse.getSelectedItem();
-                if (selected != null) {
-                    cls.setCourseId(selected.getId());
-                }
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Sĩ số tối đa phải là số.");
+    private void save() {
+        try {
+            classSection.setClassId(inClassId.getText().trim());
+            classSection.setName(inName.getText().trim());
+            classSection.setSemester(inSemester.getText().trim());
+            classSection.setYear(inYear.getText().trim());
+            classSection.setMaxStudents(Integer.parseInt(inMaxStudents.getText().trim()));
+            classSection.setStatus(inStatus.getValue());
+            if (inCourse.getValue() == null || inLecturer.getValue() == null) {
+                FxHelper.showWarning("Vui lòng chọn học phần và giảng viên.");
                 return;
             }
-            boolean ok = classSectionDAO.updateClassSection(cls);
-            if (ok) {
-                JOptionPane.showMessageDialog(this, "Cập nhật lớp học phần thành công");
+            classSection.setCourseId(inCourse.getValue().getId());
+            classSection.setLecturerId(inLecturer.getValue().getId());
+
+            if (classSectionDAO.updateClassSection(classSection)) {
+                FxHelper.showInfo("Cập nhật thành công");
                 if (onSaved != null) onSaved.run();
-                dispose();
+                close();
             } else {
-                JOptionPane.showMessageDialog(this, "Cập nhật thất bại");
+                FxHelper.showError("Cập nhật thất bại");
             }
+        } catch (NumberFormatException ex) {
+            FxHelper.showWarning("Sĩ số tối đa phải là số nguyên");
         }
     }
 }

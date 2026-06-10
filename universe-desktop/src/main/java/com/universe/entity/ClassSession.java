@@ -55,6 +55,8 @@ public class ClassSession {
 
     @Override
     public String toString() {
-        return (date != null ? date.toString() : "?") + " (tiết " + startPeriod + "-" + endPeriod + ")";
+        return (date != null ? date.toString() : "?")
+                + " - tiết " + startPeriod + "-" + endPeriod
+                + " - " + room + " [" + id + "]";
     }
 }

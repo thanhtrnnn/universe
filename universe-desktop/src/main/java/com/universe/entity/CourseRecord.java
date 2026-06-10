@@ -84,7 +84,7 @@ public class CourseRecord {
         double tx = score1 != null ? score1 : 0;
         double gk = score2 != null ? score2 : 0;
         double extra = score3 != null ? score3 : tx;
-        double txAvg = (tx + extra) / (score3 != null ? 2.0 : 1.0);
+        double txAvg = score3 != null ? (tx + score3) / 2.0 : tx;
         return Math.round((txAvg * 0.2 + gk * 0.3 + examScore * 0.5) * 100.0) / 100.0;
     }
 }

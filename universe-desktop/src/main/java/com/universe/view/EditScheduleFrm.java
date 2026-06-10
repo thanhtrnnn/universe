@@ -3,86 +3,117 @@ package com.universe.view;
 import com.universe.dao.ScheduleDAO;
 import com.universe.entity.Schedule;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 /**
- * Giao diện chỉnh sửa lịch học (Chương 4.3.2.3, bước 18-32).
- * set() thuộc tính Schedule → ScheduleDAO.updateSchedule().
+ * Giao diện sửa Lịch học (EditScheduleFrm).
  */
-public class EditScheduleFrm extends JFrame implements ActionListener {
+public class EditScheduleFrm extends Stage {
 
     private final Schedule schedule;
     private final ScheduleDAO scheduleDAO = new ScheduleDAO();
+    private final Runnable onSaved;
 
-    private final JComboBox<String> inDay = new JComboBox<>(new String[]{
-            "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"});
-    private final JTextField inStart = new JTextField(5);
-    private final JTextField inEnd = new JTextField(5);
-    private final JTextField inRoom = new JTextField(12);
-    private final JButton subSave = new JButton("Lưu");
+    private final ComboBox<String> inDayOfWeek = new ComboBox<>(FXCollections.observableArrayList("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"));
+    private final TextField inStart = new TextField();
+    private final TextField inEnd = new TextField();
+    private final TextField inRoom = new TextField();
+    private final DatePicker inAppliedFrom = new DatePicker();
+    private final DatePicker inAppliedTo = new DatePicker();
 
-    public EditScheduleFrm(Schedule schedule) {
+    public EditScheduleFrm(Schedule schedule, Runnable onSaved) {
         this.schedule = schedule;
-        setTitle("Chỉnh sửa lịch học - " + schedule.getId());
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(380, 260);
-        setLocationRelativeTo(null);
+        this.onSaved = onSaved;
+        setTitle("Sửa Lịch học");
+        initModality(Modality.APPLICATION_MODAL);
         buildUI();
-        fillData();
     }
 
     private void buildUI() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
-        GridBagConstraints gc = new GridBagConstraints();
-        gc.insets = new Insets(6, 6, 6, 6);
-        gc.anchor = GridBagConstraints.WEST;
+        VBox root = new VBox(24);
+        root.setPadding(new Insets(32));
+        root.setAlignment(Pos.TOP_LEFT);
 
-        int y = 0;
-        gc.gridx = 0; gc.gridy = y; panel.add(new JLabel("Thứ:"), gc);
-        gc.gridx = 1; panel.add(inDay, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Tiết bắt đầu:"), gc);
-        gc.gridx = 1; panel.add(inStart, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Tiết kết thúc:"), gc);
-        gc.gridx = 1; panel.add(inEnd, gc);
-        gc.gridx = 0; gc.gridy = ++y; panel.add(new JLabel("Phòng:"), gc);
-        gc.gridx = 1; panel.add(inRoom, gc);
-        gc.gridx = 0; gc.gridy = ++y; gc.gridwidth = 2; gc.anchor = GridBagConstraints.CENTER;
-        panel.add(subSave, gc);
+        Label title = new Label("Sửa thông tin lịch học");
+        title.getStyleClass().add("section-title");
 
-        subSave.addActionListener(this);
-        add(panel);
-    }
-
-    private void fillData() {
-        inDay.setSelectedItem(schedule.getDayOfWeek());
+        VBox form = new VBox(16);
+        
+        inDayOfWeek.setValue(schedule.getDayOfWeek());
         inStart.setText(String.valueOf(schedule.getStartPeriod()));
         inEnd.setText(String.valueOf(schedule.getEndPeriod()));
         inRoom.setText(schedule.getRoom());
+        inAppliedFrom.setValue(schedule.getAppliedFrom());
+        inAppliedTo.setValue(schedule.getAppliedTo());
+
+        HBox row1 = new HBox(16, createFormRow("Ngày trong tuần", inDayOfWeek), createFormRow("Phòng học", inRoom));
+        HBox row2 = new HBox(16, createFormRow("Tiết bắt đầu", inStart), createFormRow("Tiết kết thúc", inEnd));
+        HBox row3 = new HBox(16, createFormRow("Áp dụng từ ngày", inAppliedFrom), createFormRow("Áp dụng đến ngày", inAppliedTo));
+
+        form.getChildren().addAll(row1, row2, row3);
+
+        Button btnSave = new Button("Lưu lịch học");
+        btnSave.getStyleClass().add("btn-primary");
+        btnSave.setOnAction(e -> save());
+
+        Button btnCancel = new Button("Hủy");
+        btnCancel.getStyleClass().add("btn-secondary");
+        btnCancel.setOnAction(e -> close());
+
+        HBox actions = new HBox(12, btnSave, btnCancel);
+        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.setPadding(new Insets(16, 0, 0, 0));
+
+        root.getChildren().addAll(title, form, actions);
+
+        Scene scene = FxHelper.createFormScene(root, 560);
+        setScene(scene);
+        setMinWidth(560);
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == subSave) {
-            try {
-                schedule.setDayOfWeek((String) inDay.getSelectedItem());
-                schedule.setStartPeriod(Integer.parseInt(inStart.getText().trim()));
-                schedule.setEndPeriod(Integer.parseInt(inEnd.getText().trim()));
-                schedule.setRoom(inRoom.getText().trim());
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Tiết học phải là số.");
-                return;
-            }
-            boolean ok = scheduleDAO.updateSchedule(schedule);
-            if (ok) {
-                JOptionPane.showMessageDialog(this, "Cập nhật lịch học thành công");
-                dispose();
+    private VBox createFormRow(String labelText, javafx.scene.Node input) {
+        VBox row = new VBox(4);
+        Label lbl = new Label(labelText);
+        lbl.getStyleClass().add("caption-text");
+        
+        if (input instanceof TextField || input instanceof ComboBox || input instanceof DatePicker) {
+            ((javafx.scene.layout.Region) input).setMaxWidth(Double.MAX_VALUE);
+        }
+        
+        row.getChildren().addAll(lbl, input);
+        return row;
+    }
+
+    private void save() {
+        try {
+            schedule.setDayOfWeek(inDayOfWeek.getValue());
+            schedule.setStartPeriod(Integer.parseInt(inStart.getText().trim()));
+            schedule.setEndPeriod(Integer.parseInt(inEnd.getText().trim()));
+            schedule.setRoom(inRoom.getText().trim());
+            schedule.setAppliedFrom(inAppliedFrom.getValue());
+            schedule.setAppliedTo(inAppliedTo.getValue());
+
+            if (scheduleDAO.updateSchedule(schedule)) {
+                FxHelper.showInfo("Cập nhật lịch học thành công");
+                if (onSaved != null) onSaved.run();
+                close();
             } else {
-                JOptionPane.showMessageDialog(this, "Cập nhật thất bại");
+                FxHelper.showError("Cập nhật thất bại");
             }
+        } catch (Exception ex) {
+            FxHelper.showWarning("Vui lòng kiểm tra lại định dạng dữ liệu");
         }
     }
 }

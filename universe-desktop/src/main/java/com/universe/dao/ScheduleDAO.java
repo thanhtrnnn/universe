@@ -53,6 +53,44 @@ public class ScheduleDAO extends DAO {
         return list;
     }
 
+    /** Lấy toàn bộ lịch dạy của giảng viên (xem TKB giảng dạy). */
+    public List<Schedule> getLecturerSchedule(String lecturerId) {
+        List<Schedule> list = new ArrayList<>();
+        String sql = "SELECT s.* FROM tblSchedule s " +
+                     "JOIN tblClassSection cs ON cs.id = s.tblClassSectionid " +
+                     "WHERE cs.tblLecturerid = ? ORDER BY s.dayOfWeek, s.startPeriod";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, lecturerId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi getLecturerSchedule: " + e.getMessage(), e);
+        }
+        return list;
+    }
+
+    public boolean insertSchedule(Schedule s) {
+        String sql = "INSERT INTO tblSchedule (id, dayOfWeek, startPeriod, endPeriod, room, appliedFrom, appliedTo, tblClassSectionid) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, s.getId());
+            ps.setString(2, s.getDayOfWeek());
+            ps.setInt(3, s.getStartPeriod());
+            ps.setInt(4, s.getEndPeriod());
+            ps.setString(5, s.getRoom());
+            ps.setDate(6, s.getAppliedFrom() != null ? Date.valueOf(s.getAppliedFrom()) : null);
+            ps.setDate(7, s.getAppliedTo() != null ? Date.valueOf(s.getAppliedTo()) : null);
+            ps.setString(8, s.getClassSectionId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi insertSchedule: " + e.getMessage(), e);
+        }
+    }
+
     public boolean updateSchedule(Schedule s) {
         String sql = "UPDATE tblSchedule SET dayOfWeek = ?, startPeriod = ?, endPeriod = ?, " +
                      "room = ?, appliedFrom = ?, appliedTo = ? WHERE id = ?";
@@ -68,6 +106,17 @@ public class ScheduleDAO extends DAO {
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi updateSchedule: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean deleteSchedule(String id) {
+        String sql = "DELETE FROM tblSchedule WHERE id = ?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi deleteSchedule: " + e.getMessage(), e);
         }
     }
 

@@ -11,7 +11,7 @@ Mẫu **MVC mở rộng với DAO** (Chương 2.4.1 báo cáo):
 | Tầng | Vai trò | Gói |
 |------|---------|-----|
 | **Model** (Entity) | Lớp thực thể nghiệp vụ | `com.universe.entity` |
-| **View** (Frm) | Màn hình Java Swing kế thừa `JFrame`, lắng nghe `ActionListener` | `com.universe.view` |
+| **View** (Frm) | Màn hình JavaFX (`Stage` và các `Node` nhúng trong dashboard) | `com.universe.view` |
 | **Controller/DAO** | Truy cập CSDL qua JDBC, kế thừa lớp `DAO` | `com.universe.dao` |
 
 Hạ tầng bổ sung (theo yêu cầu tích hợp):
@@ -57,7 +57,7 @@ Hạ tầng bổ sung (theo yêu cầu tích hợp):
 ## Chạy thử
 
 ```bash
-# 1. Bật hạ tầng (PostgreSQL nạp sẵn schema.sql + seed data)
+# 1. Bật hạ tầng (PostgreSQL nạp schema.sql + demo-seed.sql)
 docker compose up -d
 
 # 2. Biên dịch
@@ -82,8 +82,8 @@ mvn exec:java -Dexec.mainClass="com.universe.consumer.NotificationConsumer"
 | Vai trò | Tên đăng nhập | Mật khẩu |
 |---------|---------------|----------|
 | Quản trị viên | `admin` | `123456` |
-| Giảng viên | `dothilien` | `123456` |
-| Sinh viên | `b23dcat120` | `123456` |
+| Giảng viên | `lecturer` | `123456` |
+| Sinh viên | `student` | `123456` |
 
 ## Cấu hình
 
@@ -99,5 +99,5 @@ src/main/java/com/universe/
 ├── consumer/                 # NotificationConsumer (Kafka → DB)
 ├── entity/                   # 12 lớp Model
 ├── dao/                      # DAO (base) + 9 DAO nghiệp vụ
-└── view/                     # 19 màn hình JFrame
+└── view/                     # các màn hình JavaFX theo vai trò
 ```

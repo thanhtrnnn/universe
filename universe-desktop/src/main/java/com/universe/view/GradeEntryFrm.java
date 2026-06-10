@@ -1,162 +1,161 @@
 package com.universe.view;
 
-import com.universe.dao.ClassSectionDAO;
 import com.universe.dao.CourseRecordDAO;
+import com.universe.dao.ClassSectionDAO;
 import com.universe.entity.ClassSection;
 import com.universe.entity.CourseRecord;
 import com.universe.entity.User;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.util.converter.DoubleStringConverter;
+
 import java.util.List;
 
 /**
- * Giao diện nhập / sửa điểm (Chương 4.3.1.10, đã chuẩn hoá tên lớp).
- * btnSearchClass → searchClassSection(); chọn lớp → bảng SV ô nhập điểm;
- * btnSubmitGrades → enterGrade() (kiểm tra điểm trong [0,10] - test case 5.2.2.10).
+ * Giao diện nhập điểm (GradeEntryFrm).
  */
-public class GradeEntryFrm extends JFrame implements ActionListener {
+public class GradeEntryFrm extends VBox {
 
     private final User currentUser;
+    private final CourseRecordDAO recordDAO = new CourseRecordDAO();
     private final ClassSectionDAO classSectionDAO = new ClassSectionDAO();
-    private final CourseRecordDAO courseRecordDAO = new CourseRecordDAO();
 
-    private final JTextField txtClassSection = new JTextField(16);
-    private final JButton btnSearchClass = new JButton("Tìm lớp");
-    private final JButton btnLoadStudents = new JButton("Tải sinh viên");
-    private final JButton btnSubmitGrades = new JButton("Xác nhận nộp điểm");
-    private final JComboBox<ClassSection> cbClass = new JComboBox<>();
-    private final JTable tblGrades;
-    private final DefaultTableModel model;
-
-    private List<CourseRecord> records = new ArrayList<>();
+    private final ComboBox<ClassSection> inClassSection = new ComboBox<>();
+    private final TableView<CourseRecord> tblGrade = new TableView<>();
+    private final ObservableList<CourseRecord> data = FXCollections.observableArrayList();
 
     public GradeEntryFrm(User currentUser) {
         this.currentUser = currentUser;
-        setTitle("Nhập / Sửa điểm");
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-        setSize(820, 480);
-        setLocationRelativeTo(null);
-
-        // Cột TX, GK, TP, CK cho phép sửa
-        model = new DefaultTableModel(
-                new Object[]{"MSSV", "Họ tên", "TX", "GK", "Thành phần", "CK"}, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return c >= 2; }
-        };
-        tblGrades = new JTable(model);
-
         buildUI();
+        loadClasses();
     }
 
+    @SuppressWarnings("unchecked")
     private void buildUI() {
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        top.add(new JLabel("Tìm lớp:"));
-        top.add(txtClassSection);
-        top.add(btnSearchClass);
-        top.add(cbClass);
-        top.add(btnLoadStudents);
+        setSpacing(24);
 
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottom.add(btnSubmitGrades);
+        Label title = new Label("Nhập & Quản lý Điểm số");
+        title.getStyleClass().add("app-title");
+        Label subtitle = new Label("CẬP NHẬT ĐIỂM THÀNH PHẦN VÀ CUỐI KỲ");
+        subtitle.getStyleClass().add("section-kicker");
+        VBox header = new VBox(8, subtitle, title);
 
-        for (JButton b : new JButton[]{btnSearchClass, btnLoadStudents, btnSubmitGrades}) {
-            b.addActionListener(this);
-        }
-        txtClassSection.addActionListener(this);
+        // ── Controls ──
+        HBox controls = new HBox(16);
+        controls.setAlignment(Pos.CENTER_LEFT);
 
-        setLayout(new BorderLayout());
-        add(top, BorderLayout.NORTH);
-        add(new JScrollPane(tblGrades), BorderLayout.CENTER);
-        add(bottom, BorderLayout.SOUTH);
+        inClassSection.setPromptText("Chọn lớp học phần");
+        inClassSection.setPrefWidth(420);
+        inClassSection.valueProperty().addListener((obs, oldValue, newValue) -> loadData());
+
+        Button btnSearch = new Button("Xem danh sách");
+        btnSearch.getStyleClass().add("btn-secondary");
+        btnSearch.setOnAction(e -> loadData());
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button btnSave = new Button("Lưu Bảng điểm");
+        btnSave.getStyleClass().add("btn-primary");
+        btnSave.setOnAction(e -> saveGrades());
+
+        controls.getChildren().addAll(inClassSection, btnSearch, spacer, btnSave);
+
+        // ── Table ──
+        VBox tableCard = new VBox();
+        tableCard.getStyleClass().add("card");
+        VBox.setVgrow(tableCard, Priority.ALWAYS);
+
+        tblGrade.setEditable(true); // Quan trọng để sửa trực tiếp trên bảng
+
+        TableColumn<CourseRecord, String> colStudentId = new TableColumn<>("Mã Sinh viên");
+        colStudentId.setCellValueFactory(new PropertyValueFactory<>("studentId"));
+        colStudentId.setPrefWidth(120);
+
+        TableColumn<CourseRecord, String> colStudentName = new TableColumn<>("Họ và Tên");
+        colStudentName.setCellValueFactory(new PropertyValueFactory<>("studentName"));
+        colStudentName.setPrefWidth(220);
+
+        TableColumn<CourseRecord, Double> colScore1 = new TableColumn<>("Điểm CC (20%)");
+        colScore1.setCellValueFactory(new PropertyValueFactory<>("score1"));
+        colScore1.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        colScore1.setOnEditCommit(e -> e.getRowValue().setScore1(e.getNewValue()));
+        colScore1.setPrefWidth(100);
+
+        TableColumn<CourseRecord, Double> colScore2 = new TableColumn<>("Điểm GK (30%)");
+        colScore2.setCellValueFactory(new PropertyValueFactory<>("score2"));
+        colScore2.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        colScore2.setOnEditCommit(e -> e.getRowValue().setScore2(e.getNewValue()));
+        colScore2.setPrefWidth(100);
+
+        TableColumn<CourseRecord, Double> colExam = new TableColumn<>("Điểm Thi (50%)");
+        colExam.setCellValueFactory(new PropertyValueFactory<>("examScore"));
+        colExam.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        colExam.setOnEditCommit(e -> e.getRowValue().setExamScore(e.getNewValue()));
+        colExam.setPrefWidth(100);
+
+        TableColumn<CourseRecord, Double> colTotal = new TableColumn<>("Tổng kết");
+        colTotal.setCellValueFactory(new PropertyValueFactory<>("totalScore"));
+        colTotal.setPrefWidth(100);
+
+        tblGrade.getColumns().addAll(colStudentId, colStudentName, colScore1, colScore2, colExam, colTotal);
+        tblGrade.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblGrade.setPlaceholder(new Label("Nhập mã lớp để hiển thị bảng điểm. Bấm đúp vào ô điểm để sửa."));
+        tblGrade.setItems(data);
+
+        VBox.setVgrow(tblGrade, Priority.ALWAYS);
+        tableCard.getChildren().add(tblGrade);
+
+        getChildren().addAll(header, controls, tableCard);
     }
 
-    private void searchClasses() {
-        cbClass.removeAllItems();
-        for (ClassSection c : classSectionDAO.searchClassSection(txtClassSection.getText().trim())) {
-            cbClass.addItem(c);
-        }
-    }
-
-    private void loadStudents() {
-        ClassSection cls = (ClassSection) cbClass.getSelectedItem();
-        if (cls == null) {
-            JOptionPane.showMessageDialog(this, "Vui lòng tìm và chọn một lớp học phần.");
+    private void loadData() {
+        ClassSection classSection = inClassSection.getValue();
+        if (classSection == null) {
+            data.clear();
             return;
         }
-        records = courseRecordDAO.findByClassSection(cls.getId());
-        model.setRowCount(0);
-        for (CourseRecord r : records) {
-            model.addRow(new Object[]{
-                    r.getStudentId(), r.getStudentName(),
-                    val(r.getScore1()), val(r.getScore2()), val(r.getScore3()), val(r.getExamScore())});
-        }
-        if (records.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Lớp chưa có sinh viên đăng ký.");
+        List<CourseRecord> list = recordDAO.findByClassSection(classSection.getId());
+        data.setAll(list);
+    }
+
+    private void loadClasses() {
+        List<ClassSection> classes = classSectionDAO.getByLecturer(currentUser.getId());
+        inClassSection.setItems(FXCollections.observableArrayList(classes));
+        if (!classes.isEmpty()) {
+            inClassSection.setValue(classes.get(0));
         }
     }
 
-    private void submitGrades() {
-        if (records.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Chưa có dữ liệu để nộp.");
+    private void saveGrades() {
+        if (data.isEmpty()) {
+            FxHelper.showWarning("Bảng điểm trống.");
             return;
         }
-        if (tblGrades.isEditing()) {
-            tblGrades.getCellEditor().stopCellEditing();
-        }
-        try {
-            for (int i = 0; i < records.size(); i++) {
-                CourseRecord r = records.get(i);
-                r.setScore1(parseScore(model.getValueAt(i, 2)));
-                r.setScore2(parseScore(model.getValueAt(i, 3)));
-                r.setScore3(parseScore(model.getValueAt(i, 4)));
-                r.setExamScore(parseScore(model.getValueAt(i, 5)));
+        boolean ok = true;
+        for (CourseRecord r : data) {
+            if (!recordDAO.editGrade(r)) {
+                ok = false;
             }
-        } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage());
-            return;
         }
-        boolean ok = courseRecordDAO.enterGrade(records);
         if (ok) {
-            JOptionPane.showMessageDialog(this, "Nộp điểm thành công");
+            FxHelper.showInfo("Cập nhật điểm thành công!");
+            tblGrade.refresh();
         } else {
-            JOptionPane.showMessageDialog(this, "Nộp điểm thất bại");
-        }
-    }
-
-    /** Parse và validate điểm trong [0,10], cho phép rỗng = null. */
-    private Double parseScore(Object cell) {
-        if (cell == null || cell.toString().trim().isEmpty()) {
-            return null;
-        }
-        double v;
-        try {
-            v = Double.parseDouble(cell.toString().trim());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Điểm phải là số: '" + cell + "'");
-        }
-        if (v < 0 || v > 10) {
-            throw new IllegalArgumentException("Điểm phải trong khoảng [0, 10]: " + v);
-        }
-        return v;
-    }
-
-    private String val(Double d) {
-        return d == null ? "" : String.valueOf(d);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        Object src = e.getSource();
-        if (src == btnSearchClass || src == txtClassSection) {
-            searchClasses();
-        } else if (src == btnLoadStudents) {
-            loadStudents();
-        } else if (src == btnSubmitGrades) {
-            submitGrades();
+            FxHelper.showError("Có lỗi xảy ra khi cập nhật điểm.");
         }
     }
 }

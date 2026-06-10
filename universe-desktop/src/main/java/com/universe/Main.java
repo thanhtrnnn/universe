@@ -3,15 +3,24 @@ package com.universe;
 import com.universe.consumer.NotificationConsumer;
 import com.universe.view.LoginFrm;
 
-import javax.swing.*;
+import javafx.application.Application;
+import javafx.stage.Stage;
 
 /**
- * Điểm khởi động ứng dụng UniVerse Desktop.
+ * Điểm khởi động ứng dụng UniVerse Desktop (JavaFX).
  * Mở giao diện đăng nhập và khởi động consumer Kafka nền (ghi thông báo vào DB).
  */
-public class Main {
+public class Main extends Application {
+
+    @Override
+    public void start(Stage primaryStage) {
+        new LoginFrm().show();
+    }
 
     public static void main(String[] args) {
+        // Khởi tạo CSDL nếu cần
+        com.universe.util.DatabaseSeeder.seedIfNeeded();
+
         // Khởi động consumer Kafka ở thread nền (nếu Kafka không sẵn sàng, app vẫn chạy)
         try {
             NotificationConsumer.startInBackground();
@@ -19,13 +28,6 @@ public class Main {
             System.err.println("Không khởi động được NotificationConsumer: " + e.getMessage());
         }
 
-        SwingUtilities.invokeLater(() -> {
-            try {
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception ignore) {
-                // dùng look and feel mặc định
-            }
-            new LoginFrm().setVisible(true);
-        });
+        launch(args);
     }
 }
