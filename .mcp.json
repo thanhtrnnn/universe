@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "visual-paradigm": {
+      "url": "http://localhost:2026/sse"
+    }
+  }
+}

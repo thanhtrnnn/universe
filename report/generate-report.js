@@ -24,6 +24,7 @@ const FILE_DIAGRAMS = {
   'module1_auth_users.md': ['uc_module1.png', 'entity_module1.png', 'bce_module1.png', 'seq_uc01_login.png', 'seq_uc03_users.png'],
   'module2_academic.md': ['uc_module2.png', 'entity_module2.png', 'bce_module2.png', 'seq_uc07_enroll.png', 'seq_uc05_class.png'],
   'module3_attendance_grades.md': ['uc_module3.png', 'entity_module3.png', 'bce_module3.png', 'seq_uc10_attendance.png', 'seq_uc12_grades.png'],
+  'chuong3_thietke.md': ['entity_system_full.png'],
 };
 
 let figureCounter = 0;
@@ -403,6 +404,7 @@ async function main() {
     { name: 'module1_auth_users.md',            diagrams: FILE_DIAGRAMS['module1_auth_users.md'] },
     { name: 'module2_academic.md',              diagrams: FILE_DIAGRAMS['module2_academic.md'] },
     { name: 'module3_attendance_grades.md',     diagrams: FILE_DIAGRAMS['module3_attendance_grades.md'] },
+    { name: 'chuong3_thietke.md',              diagrams: FILE_DIAGRAMS['chuong3_thietke.md'] },
   ];
 
   for (const f of files) {

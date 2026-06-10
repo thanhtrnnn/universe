@@ -2,3 +2,13 @@
 node_modules
 dist
 build
+
+# Office temp/lock files
+~$*
+
+# Scheduled tasks lock
+.claude/scheduled_tasks.lock
+
+# Java build artifacts (universe-desktop)
+universe-desktop/target/
+universe-desktop/dependency-reduced-pom.xml
