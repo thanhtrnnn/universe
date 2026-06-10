@@ -20,6 +20,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TextField;
 import javafx.util.converter.DoubleStringConverter;
 
 import java.util.List;
@@ -91,19 +94,19 @@ public class GradeEntryFrm extends VBox {
 
         TableColumn<CourseRecord, Double> colScore1 = new TableColumn<>("Điểm CC (20%)");
         colScore1.setCellValueFactory(new PropertyValueFactory<>("score1"));
-        colScore1.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        colScore1.setCellFactory(createNumberCellFactory());
         colScore1.setOnEditCommit(e -> e.getRowValue().setScore1(e.getNewValue()));
         colScore1.setPrefWidth(100);
 
         TableColumn<CourseRecord, Double> colScore2 = new TableColumn<>("Điểm GK (30%)");
         colScore2.setCellValueFactory(new PropertyValueFactory<>("score2"));
-        colScore2.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        colScore2.setCellFactory(createNumberCellFactory());
         colScore2.setOnEditCommit(e -> e.getRowValue().setScore2(e.getNewValue()));
         colScore2.setPrefWidth(100);
 
         TableColumn<CourseRecord, Double> colExam = new TableColumn<>("Điểm Thi (50%)");
         colExam.setCellValueFactory(new PropertyValueFactory<>("examScore"));
-        colExam.setCellFactory(TextFieldTableCell.forTableColumn(new DoubleStringConverter()));
+        colExam.setCellFactory(createNumberCellFactory());
         colExam.setOnEditCommit(e -> e.getRowValue().setExamScore(e.getNewValue()));
         colExam.setPrefWidth(100);
 
@@ -157,5 +160,28 @@ public class GradeEntryFrm extends VBox {
         } else {
             FxHelper.showError("Có lỗi xảy ra khi cập nhật điểm.");
         }
+    }
+
+    private Callback<TableColumn<CourseRecord, Double>, TableCell<CourseRecord, Double>> createNumberCellFactory() {
+        return col -> {
+            TextFieldTableCell<CourseRecord, Double> cell = new TextFieldTableCell<>(new DoubleStringConverter()) {
+                @Override
+                public void startEdit() {
+                    super.startEdit();
+                    if (getGraphic() instanceof TextField tf) {
+                        tf.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+                            if (!isNowFocused) {
+                                try {
+                                    commitEdit(getConverter().fromString(tf.getText()));
+                                } catch (Exception ignored) {
+                                    cancelEdit();
+                                }
+                            }
+                        });
+                    }
+                }
+            };
+            return cell;
+        };
     }
 }
