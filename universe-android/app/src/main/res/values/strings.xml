@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UniVerse</string>
+    <string name="login_title">Đăng nhập UniVerse</string>
+    <string name="login_subtitle">Không gian học tập số của bạn</string>
+    <string name="login_kicker">KẾT NỐI HỆ THỐNG HỌC TẬP</string>
+    <string name="login_tagline">A calm digital space for academic management</string>
+    <string name="username">Tên đăng nhập</string>
+    <string name="password">Mật khẩu</string>
+    <string name="api_address">Địa chỉ API</string>
+    <string name="test_connection">Kiểm tra kết nối API</string>
+    <string name="calibration_title">Đặt vị trí phòng học</string>
+    <string name="calibration_instructions">Trên UniVerse Desktop, chọn buổi học và nhấn “Lấy vị trí bằng điện thoại”. Sau đó quét QR đang hiển thị. Điện thoại sẽ chỉ gửi vị trí khi GPS đạt sai số tối đa 25 m.</string>
+    <string name="scan_desktop_location_qr">Quét QR lấy vị trí trên desktop</string>
+    <string name="close">Đóng</string>
+    <string name="login">Đăng nhập</string>
+    <string name="demo_account">Sinh viên: student / 123456 · Giảng viên: lecturer / 123456</string>
+    <string name="home">Tổng quan</string>
+    <string name="registration">Đăng ký</string>
+    <string name="schedule">Lịch học</string>
+    <string name="grades">Điểm</string>
+    <string name="notifications">Thông báo</string>
+    <string name="scan_qr">Quét QR điểm danh</string>
+    <string name="sync_desktop_location">Đồng bộ GPS cho UniVerse Desktop</string>
+    <string name="attendance">Điểm danh</string>
+    <string name="grade_entry">Nhập điểm</string>
+    <string name="send_notification">Thông báo</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="retry">Thử lại</string>
+    <string name="search_hint">Tìm theo mã hoặc tên học phần</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="register">Đăng ký lớp</string>
+    <string name="loading">Đang tải dữ liệu...</string>
+    <string name="empty_data">Chưa có dữ liệu.</string>
+</resources>

@@ -87,7 +87,12 @@ mvn exec:java -Dexec.mainClass="com.universe.consumer.NotificationConsumer"
 
 ## Cấu hình
 
-Sửa kết nối DB/Redis/Kafka tại [`src/main/resources/app.properties`](src/main/resources/app.properties).
+Sửa kết nối DB/Redis/Kafka và Mobile API tại
+[`src/main/resources/app.properties`](src/main/resources/app.properties).
+
+Khi tạo QR điểm danh, desktop không dùng định vị Windows. Giảng viên nhấn
+`Lấy vị trí bằng điện thoại`, quét QR bằng app Android và desktop tự nhận GPS qua
+`mobile.api.base.url` (mặc định `http://localhost:8080/api/`).
 
 ## Cấu trúc mã nguồn
 
