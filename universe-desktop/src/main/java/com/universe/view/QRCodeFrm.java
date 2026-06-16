@@ -52,7 +52,7 @@ public class QRCodeFrm extends VBox {
     private static final int ROTATION_SECONDS = 5;
     private static final int VALID_MINUTES = 15;
     private static final double GEOFENCE_RADIUS_METERS = 50.0;
-    private static final double MAX_CALIBRATION_ACCURACY_METERS = 25.0;
+    private static final double MAX_CALIBRATION_ACCURACY_METERS = 50.0;
 
     private final User currentUser;
     private final ClassSectionDAO classSectionDAO = new ClassSectionDAO();

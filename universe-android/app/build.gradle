@@ -38,4 +38,5 @@ android {
 
 dependencies {
     implementation files("libs/core-3.5.3.jar")
+    implementation "com.google.android.gms:play-services-location:21.2.0"
 }

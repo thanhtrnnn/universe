@@ -6,13 +6,15 @@ $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sdk = if ($env:ANDROID_HOME) {
     $env:ANDROID_HOME
+} elseif (Test-Path "D:\VMs") {
+    "D:\VMs"
 } else {
     Join-Path $env:LOCALAPPDATA "Android\Sdk"
 }
-$aapt2 = Join-Path $sdk "build-tools\34.0.0\aapt2.exe"
+$aapt2 = Join-Path $sdk "build-tools\36.1.0\aapt2.exe"
 
 if (-not (Test-Path $aapt2)) {
-    throw "Không tìm thấy aapt2 tại $aapt2. Hãy cài Android SDK Build-Tools 34.0.0."
+    throw "Không tìm thấy aapt2 tại $aapt2. Hãy cài Android SDK Build-Tools 36.1.0."
 }
 
 $env:ANDROID_HOME = $sdk

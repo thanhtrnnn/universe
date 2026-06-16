@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 final class LocationCalibrationService {
 
-    static final double MAX_ACCURACY_METERS = 25.0;
+    static final double MAX_ACCURACY_METERS = 50.0;
     static final Duration SESSION_TTL = Duration.ofMinutes(2);
 
     private static final int MAX_ACTIVE_SESSIONS = 1_000;

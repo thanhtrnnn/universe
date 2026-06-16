@@ -28,6 +28,7 @@ public final class FxHelper {
     public static Scene createScene(javafx.scene.Parent root, double width, double height) {
         Scene scene = new Scene(root, width, height);
         applyStylesheet(scene);
+        applyFastScrolling(scene);
         return scene;
     }
 
@@ -44,7 +45,34 @@ public final class FxHelper {
 
         Scene scene = new Scene(scrollPane, 560, Math.min(preferredHeight, 760));
         applyStylesheet(scene);
+        applyFastScrolling(scene);
         return scene;
+    }
+
+    private static void applyFastScrolling(Scene scene) {
+        javafx.event.EventDispatcher originalDispatcher = scene.getEventDispatcher();
+        scene.setEventDispatcher((event, tail) -> {
+            if (event instanceof javafx.scene.input.ScrollEvent scrollEvent
+                    && scrollEvent.getEventType() == javafx.scene.input.ScrollEvent.SCROLL) {
+                javafx.scene.input.ScrollEvent fastScroll = new javafx.scene.input.ScrollEvent(
+                        scrollEvent.getSource(), scrollEvent.getTarget(),
+                        scrollEvent.getEventType(),
+                        scrollEvent.getX(), scrollEvent.getY(),
+                        scrollEvent.getScreenX(), scrollEvent.getScreenY(),
+                        scrollEvent.isShiftDown(), scrollEvent.isControlDown(),
+                        scrollEvent.isAltDown(), scrollEvent.isMetaDown(),
+                        scrollEvent.isDirect(), scrollEvent.isInertia(),
+                        scrollEvent.getDeltaX() * 3.0, scrollEvent.getDeltaY() * 3.0,
+                        scrollEvent.getTotalDeltaX() * 3.0, scrollEvent.getTotalDeltaY() * 3.0,
+                        scrollEvent.getTextDeltaXUnits(), scrollEvent.getTextDeltaX() * 3.0,
+                        scrollEvent.getTextDeltaYUnits(), scrollEvent.getTextDeltaY() * 3.0,
+                        scrollEvent.getTouchCount(),
+                        scrollEvent.getPickResult()
+                );
+                return originalDispatcher.dispatchEvent(fastScroll, tail);
+            }
+            return originalDispatcher.dispatchEvent(event, tail);
+        });
     }
 
     /** Bọc màn hình nội dung để nút và bảng không bị che khi cửa sổ thu nhỏ. */

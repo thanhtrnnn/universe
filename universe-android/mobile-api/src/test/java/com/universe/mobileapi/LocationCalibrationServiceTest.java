@@ -32,7 +32,7 @@ class LocationCalibrationServiceTest {
     }
 
     @Test
-    void rejectsLocationWorseThanTwentyFiveMeters() throws Exception {
+    void rejectsLocationWorseThanFiftyMeters() throws Exception {
         LocationCalibrationService service = new LocationCalibrationService(
                 (session, section, lecturer) -> true,
                 CLOCK);
@@ -46,7 +46,7 @@ class LocationCalibrationServiceTest {
                         "LECTURER-1",
                         21.028511,
                         105.804817,
-                        26));
+                        51));
 
         assertEquals(422, error.status());
     }

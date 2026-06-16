@@ -5,14 +5,16 @@ param(
 $ErrorActionPreference = "Stop"
 $sdk = if ($env:ANDROID_HOME) {
     $env:ANDROID_HOME
+} elseif (Test-Path "D:\VMs") {
+    "D:\VMs"
 } else {
     Join-Path $env:LOCALAPPDATA "Android\Sdk"
 }
-$systemImage = Join-Path $sdk "system-images\android-36.1\google_apis_playstore\x86_64"
+$systemImage = Join-Path $sdk "system-images\android-36\google_apis_playstore\x86_64"
 $emulator = Join-Path $sdk "emulator\emulator.exe"
 $adb = Join-Path $sdk "platform-tools\adb.exe"
 $avdRoot = Join-Path $env:USERPROFILE ".android\avd"
-$avdDirectory = Join-Path $avdRoot "$Name.avd"
+$avdDirectory = "D:\.android\$Name.avd"
 $avdIni = Join-Path $avdRoot "$Name.ini"
 
 if (-not (Test-Path $systemImage)) {
@@ -29,7 +31,7 @@ $relativePath = "avd\$Name.avd"
 avd.ini.encoding=UTF-8
 path=$avdDirectory
 path.rel=$relativePath
-target=android-36.1
+target=android-36
 "@ | Set-Content -LiteralPath $avdIni -Encoding ASCII
 
 @"
@@ -61,7 +63,7 @@ hw.ramSize=2048
 hw.sensors.orientation=yes
 hw.sensors.proximity=yes
 hw.trackBall=no
-image.sysdir.1=system-images\android-36.1\google_apis_playstore\x86_64\
+image.sysdir.1=system-images\android-36\google_apis_playstore\x86_64\
 runtime.network.latency=none
 runtime.network.speed=full
 sdcard.size=512M
@@ -71,7 +73,7 @@ skin.name=1080x2400
 skin.path=_no_skin
 tag.display=Google Play
 tag.id=google_apis_playstore
-target=android-36.1
+target=android-36
 vm.heapSize=256
 "@ | Set-Content -LiteralPath (Join-Path $avdDirectory "config.ini") -Encoding ASCII
 
