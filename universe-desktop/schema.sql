@@ -107,8 +107,9 @@ CREATE TABLE tblAttendance (
     attendedAt        TIMESTAMP,
     latitude          DOUBLE PRECISION,
     longitude         DOUBLE PRECISION,
+    distance          DOUBLE PRECISION,
     method            VARCHAR(20),                      -- QR | MANUAL
-    status            VARCHAR(20),                      -- PRESENT | ABSENT | LATE
+    status            VARCHAR(20),                      -- PRESENT | ABSENT | LATE | OUT_OF_RANGE
     tblClassSessionid VARCHAR(20) REFERENCES tblClassSession(id),
     tblStudentid      VARCHAR(20) REFERENCES tblStudent(id)
 );

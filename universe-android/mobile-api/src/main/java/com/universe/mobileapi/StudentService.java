@@ -394,43 +394,79 @@ final class StudentService {
                         latitude, longitude,
                         sessionQr.latitude(), sessionQr.longitude());
                 double allowedRadius = GeofencePolicy.effectiveRadius(sessionQr.radius());
-                if (!GeofencePolicy.isInside(distance, sessionQr.radius())) {
-                    throw new ServiceException(
-                            422,
-                            String.format(
-                                    Locale.US,
-                                    "Bạn đang cách tâm phòng học khoảng %.0f m, "
-                                            + "ngoài geofence %.0f m.",
-                                    distance,
-                                    allowedRadius));
-                }
+                boolean isInside = GeofencePolicy.isInside(distance, sessionQr.radius());
 
-                LocalDateTime existing = existingAttendance(
-                        connection, parsedQr.sessionId(), studentId);
-                if (existing != null) {
-                    connection.commit();
-                    return attendanceReceipt(sessionQr, existing, true,
-                            "Bạn đã điểm danh cho buổi học này.");
+                String existingStatus = null;
+                String existingId = null;
+                try (PreparedStatement statement = connection.prepareStatement(
+                        "SELECT id, status FROM tblAttendance WHERE tblClassSessionid = ? AND tblStudentid = ?")) {
+                    statement.setString(1, parsedQr.sessionId());
+                    statement.setString(2, studentId);
+                    try (ResultSet rs = statement.executeQuery()) {
+                        if (rs.next()) {
+                            existingId = rs.getString("id");
+                            existingStatus = rs.getString("status");
+                        }
+                    }
                 }
 
                 LocalDateTime now = LocalDateTime.now();
+                String newStatus = isInside ? "PRESENT" : "OUT_OF_RANGE";
+
+                if (existingId != null) {
+                    try (PreparedStatement statement = connection.prepareStatement(
+                            "UPDATE tblAttendance SET latitude = ?, longitude = ?, distance = ?, status = ?, attendedAt = ? WHERE id = ?")) {
+                        statement.setDouble(1, latitude);
+                        statement.setDouble(2, longitude);
+                        statement.setDouble(3, distance);
+                        statement.setString(4, newStatus);
+                        statement.setTimestamp(5, Timestamp.valueOf(now));
+                        statement.setString(6, existingId);
+                        statement.executeUpdate();
+                    }
+                    
+                    if ("OUT_OF_RANGE".equals(existingStatus) && isInside) {
+                        sendNotification(connection, studentId, "Cập nhật vị trí", "Bạn đã quay lại phạm vi lớp học.");
+                        sendNotification(connection, sessionQr.lecturerId(), "Sinh viên đã quay lại", 
+                            String.format(Locale.US, "Sinh viên %s đã quay lại phạm vi lớp học.", studentId));
+                    } else if ("PRESENT".equals(existingStatus) && !isInside) {
+                        sendNotification(connection, studentId, "Cảnh báo vị trí điểm danh", 
+                            String.format(Locale.US, "Bạn đang ở ngoài phạm vi lớp học (%.0f m > %.0f m). Vui lòng di chuyển vào trong bán kính cho phép.", distance, allowedRadius));
+                        sendNotification(connection, sessionQr.lecturerId(), "Cảnh báo sinh viên ngoài phạm vi", 
+                            String.format(Locale.US, "Sinh viên %s đang điểm danh ngoài phạm vi lớp học (%.0f m).", studentId, distance));
+                    }
+                    
+                    connection.commit();
+                    return attendanceReceipt(sessionQr, now, true, "Đã cập nhật vị trí điểm danh mới nhất.");
+                }
+
                 try (PreparedStatement statement = connection.prepareStatement("""
                         INSERT INTO tblAttendance
-                            (id, attendedAt, latitude, longitude, method, status,
+                            (id, attendedAt, latitude, longitude, distance, method, status,
                              tblClassSessionid, tblStudentid)
-                        VALUES (?, ?, ?, ?, 'QR', 'PRESENT', ?, ?)
+                        VALUES (?, ?, ?, ?, ?, 'QR', ?, ?, ?)
                         """)) {
                     statement.setString(1, shortId("ATT"));
                     statement.setTimestamp(2, Timestamp.valueOf(now));
                     statement.setDouble(3, latitude);
                     statement.setDouble(4, longitude);
-                    statement.setString(5, parsedQr.sessionId());
-                    statement.setString(6, studentId);
+                    statement.setDouble(5, distance);
+                    statement.setString(6, newStatus);
+                    statement.setString(7, parsedQr.sessionId());
+                    statement.setString(8, studentId);
                     statement.executeUpdate();
                 }
+
+                if (!isInside) {
+                    sendNotification(connection, studentId, "Cảnh báo vị trí điểm danh", 
+                        String.format(Locale.US, "Bạn đang ở ngoài phạm vi lớp học (%.0f m > %.0f m). Vui lòng di chuyển vào trong bán kính cho phép.", distance, allowedRadius));
+                    sendNotification(connection, sessionQr.lecturerId(), "Cảnh báo sinh viên ngoài phạm vi", 
+                        String.format(Locale.US, "Sinh viên %s đang điểm danh ngoài phạm vi lớp học (%.0f m).", studentId, distance));
+                }
+
                 connection.commit();
                 return attendanceReceipt(
-                        sessionQr, now, false, "Điểm danh đã được ghi nhận.");
+                        sessionQr, now, false, isInside ? "Điểm danh đã được ghi nhận." : "Đã ghi nhận điểm danh, nhưng bạn đang ở ngoài phạm vi. Hãy vào lớp!");
             } catch (RuntimeException | SQLException ex) {
                 connection.rollback();
                 throw ex;
@@ -446,7 +482,7 @@ final class StudentService {
                 SELECT s.id, s.status AS sessionStatus, s.room, s.tblClassSectionid,
                        q.id AS qrId, q.status AS qrStatus, q.expiredAt,
                        q.latitude, q.longitude, q.radius,
-                       cs.classId, cs.name
+                       cs.classId, cs.name, cs.tblLecturerid
                 FROM tblClassSession s
                 JOIN tblQRCode q ON q.id = s.tblQRCodeid
                 JOIN tblClassSection cs ON cs.id = s.tblClassSectionid
@@ -470,31 +506,13 @@ final class StudentService {
                         result.getString("tblClassSectionid"),
                         value(result, "classId"),
                         value(result, "name"),
-                        value(result, "room"));
+                        value(result, "room"),
+                        result.getString("tblLecturerid"));
             }
         }
     }
 
-    private LocalDateTime existingAttendance(Connection connection, String sessionId,
-                                             String studentId) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement("""
-                SELECT attendedAt
-                FROM tblAttendance
-                WHERE tblClassSessionid = ? AND tblStudentid = ?
-                ORDER BY attendedAt DESC
-                LIMIT 1
-                """)) {
-            statement.setString(1, sessionId);
-            statement.setString(2, studentId);
-            try (ResultSet result = statement.executeQuery()) {
-                if (!result.next()) {
-                    return null;
-                }
-                Timestamp attendedAt = result.getTimestamp("attendedAt");
-                return attendedAt == null ? LocalDateTime.now() : attendedAt.toLocalDateTime();
-            }
-        }
-    }
+
 
     private JsonObject attendanceReceipt(SessionQr sessionQr, LocalDateTime attendedAt,
                                          boolean alreadyMarked, String message) {
@@ -540,6 +558,18 @@ final class StudentService {
                 "UPDATE tblClassSection SET status = ? WHERE id = ?")) {
             statement.setString(1, status);
             statement.setString(2, sectionId);
+            statement.executeUpdate();
+        }
+    }
+
+    private void sendNotification(Connection connection, String userId, String title, String content) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+                "INSERT INTO tblNotification (id, title, content, sentAt, tblUserid) VALUES (?, ?, ?, ?, ?)")) {
+            statement.setString(1, shortId("NTF"));
+            statement.setString(2, title);
+            statement.setString(3, content);
+            statement.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+            statement.setString(5, userId);
             statement.executeUpdate();
         }
     }
@@ -617,6 +647,7 @@ final class StudentService {
             String classSectionId,
             String classCode,
             String className,
-            String room) {
+            String room,
+            String lecturerId) {
     }
 }

@@ -20,7 +20,7 @@ public class AttendanceDAO extends DAO {
     /** Danh sách điểm danh theo buổi học (kèm tên SV). */
     public List<Attendance> viewAttendance(String classSessionId) {
         List<Attendance> list = new ArrayList<>();
-        String sql = "SELECT a.id, a.attendedAt, a.latitude, a.longitude, a.method, a.status, " +
+        String sql = "SELECT a.id, a.attendedAt, a.latitude, a.longitude, a.distance, a.method, a.status, " +
                      "cr.tblStudentid, u.fullName AS sName " +
                      "FROM tblClassSession cs " +
                      "JOIN tblCourseRecord cr ON cr.tblClassSectionid = cs.tblClassSectionid " +
@@ -39,6 +39,7 @@ public class AttendanceDAO extends DAO {
                             ? rs.getTimestamp("attendedAt").toLocalDateTime() : null);
                     a.setLatitude(rs.getDouble("latitude"));
                     a.setLongitude(rs.getDouble("longitude"));
+                    a.setDistance(rs.getDouble("distance"));
                     a.setMethod(rs.getString("method") == null ? "-" : rs.getString("method"));
                     a.setStatus(rs.getString("status") == null ? "ABSENT" : rs.getString("status"));
                     a.setClassSessionId(classSessionId);
@@ -100,6 +101,7 @@ public class AttendanceDAO extends DAO {
         a.setAttendedAt(rs.getTimestamp("attendedAt") != null ? rs.getTimestamp("attendedAt").toLocalDateTime() : null);
         a.setLatitude(rs.getDouble("latitude"));
         a.setLongitude(rs.getDouble("longitude"));
+        a.setDistance(rs.getDouble("distance"));
         a.setMethod(rs.getString("method"));
         a.setStatus(rs.getString("status"));
         a.setClassSessionId(rs.getString("tblClassSessionid"));

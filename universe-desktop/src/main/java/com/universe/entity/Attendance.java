@@ -9,8 +9,9 @@ public class Attendance {
     private LocalDateTime attendedAt;
     private double latitude;
     private double longitude;
+    private double distance;
     private String method;   // QR | MANUAL
-    private String status;   // PRESENT | ABSENT | LATE
+    private String status;   // PRESENT | ABSENT | LATE | OUT_OF_RANGE
     private String classSessionId;  // FK -> tblClassSession
     private String studentId;       // FK -> tblStudent
 
@@ -21,11 +22,12 @@ public class Attendance {
     }
 
     public Attendance(String id, LocalDateTime attendedAt, double latitude, double longitude,
-                      String method, String status, String classSessionId, String studentId) {
+                      double distance, String method, String status, String classSessionId, String studentId) {
         this.id = id;
         this.attendedAt = attendedAt;
         this.latitude = latitude;
         this.longitude = longitude;
+        this.distance = distance;
         this.method = method;
         this.status = status;
         this.classSessionId = classSessionId;
@@ -43,6 +45,9 @@ public class Attendance {
 
     public double getLongitude() { return longitude; }
     public void setLongitude(double longitude) { this.longitude = longitude; }
+
+    public double getDistance() { return distance; }
+    public void setDistance(double distance) { this.distance = distance; }
 
     public String getMethod() { return method; }
     public void setMethod(String method) { this.method = method; }

@@ -103,10 +103,25 @@ public class AttendanceManageFrm extends VBox {
         colMethod.setCellValueFactory(new PropertyValueFactory<>("method"));
         colMethod.setPrefWidth(120);
 
+        TableColumn<Attendance, Double> colDistance = new TableColumn<>("Khoảng cách (m)");
+        colDistance.setCellValueFactory(new PropertyValueFactory<>("distance"));
+        colDistance.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
+            @Override
+            protected void updateItem(Double item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.1f", item));
+                }
+            }
+        });
+        colDistance.setPrefWidth(120);
+
         TableColumn<Attendance, String> colStatus = new TableColumn<>("Trạng thái");
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colStatus.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
-            private final ComboBox<String> combo = new ComboBox<>(FXCollections.observableArrayList("PRESENT", "ABSENT", "LATE"));
+            private final ComboBox<String> combo = new ComboBox<>(FXCollections.observableArrayList("PRESENT", "ABSENT", "LATE", "OUT_OF_RANGE"));
             {
                 combo.setOnAction(e -> {
                     Attendance a = getTableRow().getItem();
@@ -128,7 +143,7 @@ public class AttendanceManageFrm extends VBox {
         });
         colStatus.setPrefWidth(120);
 
-        tblAttendance.getColumns().addAll(colStudentId, colStudentName, colTime, colMethod, colStatus);
+        tblAttendance.getColumns().addAll(colStudentId, colStudentName, colTime, colMethod, colDistance, colStatus);
         tblAttendance.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         tblAttendance.setPlaceholder(new Label("Nhập mã buổi học để xem kết quả điểm danh"));
         tblAttendance.setItems(data);

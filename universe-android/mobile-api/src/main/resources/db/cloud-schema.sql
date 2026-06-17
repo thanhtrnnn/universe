@@ -85,6 +85,7 @@ CREATE TABLE IF NOT EXISTS tblAttendance (
     attendedAt TIMESTAMP,
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
+    distance DOUBLE PRECISION,
     method VARCHAR(20),
     status VARCHAR(20),
     tblClassSessionid VARCHAR(20) REFERENCES tblClassSession(id),
