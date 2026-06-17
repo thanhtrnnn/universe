@@ -1,0 +1,4 @@
+# Credentials / ghi chú riêng — KHÔNG commit
+NOTE.md
+*.env
+.env
