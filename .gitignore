@@ -2,3 +2,7 @@
 NOTE.md
 *.env
 .env
+
+# Agents
+.rtk/
+CLAUDE.md
