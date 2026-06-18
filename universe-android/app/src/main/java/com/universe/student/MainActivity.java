@@ -119,12 +119,12 @@ public final class MainActivity extends Activity {
                 stats.setOrientation(LinearLayout.HORIZONTAL);
                 stats.setWeightSum(3f);
                 stats.addView(CardFactory.statCard(MainActivity.this,
-                        String.valueOf(dashboard.enrolledCount), "LỚP ĐÃ ĐĂNG KÝ"));
+                        String.valueOf(dashboard.enrolledCount), "LỚP ĐÃ ĐĂNG KÝ", false));
                 stats.addView(CardFactory.statCard(MainActivity.this,
                         String.format(Locale.US, "%.2f", dashboard.averageScore),
-                        "ĐIỂM TRUNG BÌNH"));
+                        "ĐIỂM TRUNG BÌNH", false));
                 stats.addView(CardFactory.statCard(MainActivity.this,
-                        String.valueOf(dashboard.notificationCount), "THÔNG BÁO"));
+                        String.valueOf(dashboard.notificationCount), "THÔNG BÁO", true));
                 contentContainer.addView(stats, marginParams(0, 16, 0, 22));
 
                 addSectionTitle("Lịch học sắp tới");
@@ -346,11 +346,11 @@ public final class MainActivity extends Activity {
                 stats.setOrientation(LinearLayout.HORIZONTAL);
                 stats.setWeightSum(3f);
                 stats.addView(CardFactory.statCard(MainActivity.this,
-                        String.valueOf(grades.size()), "MÔN ĐÃ ĐĂNG KÝ"));
+                        String.valueOf(grades.size()), "MÔN ĐÃ ĐĂNG KÝ", false));
                 stats.addView(CardFactory.statCard(MainActivity.this,
-                        String.valueOf(passed), "MÔN ĐÃ QUA"));
+                        String.valueOf(passed), "MÔN ĐÃ QUA", false));
                 stats.addView(CardFactory.statCard(MainActivity.this,
-                        String.format(Locale.US, "%.2f", average), "ĐIỂM TRUNG BÌNH"));
+                        String.format(Locale.US, "%.2f", average), "ĐIỂM TRUNG BÌNH", true));
                 contentContainer.addView(stats, marginParams(0, 0, 0, 20));
 
                 if (grades.isEmpty()) {
