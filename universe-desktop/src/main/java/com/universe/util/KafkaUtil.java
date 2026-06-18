@@ -17,12 +17,20 @@ import java.util.Properties;
  */
 public final class KafkaUtil {
 
+    private static final boolean ENABLED =
+            Boolean.parseBoolean(AppConfig.get("kafka.enabled", "false"));
+
     private static final String TOPIC =
             AppConfig.get("kafka.topic.notifications", "universe.notifications");
 
-    private static final Producer<String, String> PRODUCER = createProducer();
+    private static final Producer<String, String> PRODUCER = ENABLED ? createProducer() : null;
 
     private KafkaUtil() {
+    }
+
+    /** Kafka có được bật không (kafka.enabled). Tắt = ghi thẳng DB, không cần broker. */
+    public static boolean enabled() {
+        return ENABLED;
     }
 
     private static Producer<String, String> createProducer() {
@@ -35,15 +43,49 @@ public final class KafkaUtil {
         props.put("max.block.ms", "5000");
         props.put("delivery.timeout.ms", "10000");
         props.put("request.timeout.ms", "5000");
+        applySecurity(props);
         return new KafkaProducer<>(props);
+    }
+
+    /**
+     * Áp cấu hình SASL_SSL cho Kafka cloud nếu {@code kafka.security.protocol}
+     * được khai báo trong app.properties.
+     *
+     * Hỗ trợ:
+     *  - Confluent Cloud / Redpanda: SASL_SSL + PLAIN (CA công khai, không cần truststore).
+     *  - DigitalOcean Managed Kafka: SASL_SSL + SCRAM-SHA-256 + CA riêng của DO
+     *    (khai báo ssl.truststore.* trỏ tới file CA dạng PEM).
+     */
+    public static void applySecurity(Properties props) {
+        String protocol = AppConfig.get("kafka.security.protocol", "");
+        if (protocol == null || protocol.isBlank()) {
+            return;
+        }
+        props.put("security.protocol", protocol);
+        props.put("sasl.mechanism", AppConfig.get("kafka.sasl.mechanism", "PLAIN"));
+        putIfPresent(props, "sasl.jaas.config", "kafka.sasl.jaas.config");
+        // TLS/CA cho broker dùng CA riêng (DigitalOcean). PEM => không cần keytool/JKS.
+        putIfPresent(props, "ssl.truststore.type", "kafka.ssl.truststore.type");
+        putIfPresent(props, "ssl.truststore.location", "kafka.ssl.truststore.location");
+        putIfPresent(props, "ssl.truststore.password", "kafka.ssl.truststore.password");
+    }
+
+    private static void putIfPresent(Properties props, String kafkaKey, String configKey) {
+        String v = AppConfig.get(configKey, "");
+        if (v != null && !v.isBlank()) {
+            props.put(kafkaKey, v);
+        }
     }
 
     public static String topic() {
         return TOPIC;
     }
 
-    /** Publish 1 message JSON lên topic notifications. */
+    /** Publish 1 message JSON lên topic notifications (no-op nếu Kafka tắt). */
     public static void publish(String json) {
+        if (PRODUCER == null) {
+            return; // Kafka tắt: thông báo đã được ghi thẳng vào DB nên bỏ qua
+        }
         PRODUCER.send(new ProducerRecord<>(TOPIC, json));
         PRODUCER.flush();
     }

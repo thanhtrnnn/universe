@@ -46,9 +46,17 @@ public final class LoginActivity extends Activity {
         errorText = findViewById(R.id.errorText);
 
         usernameInput.setText("student");
-        apiUrlInput.setText(sessionManager.getApiBaseUrl());
+        if (BuildConfig.DEBUG) {
+            // Debug build: chốt cứng API URL từ BuildConfig (Render), bỏ ô nhập
+            // địa chỉ + nút test để người dùng không tự đổi connection string.
+            sessionManager.setApiBaseUrl(BuildConfig.API_BASE_URL);
+            apiUrlInput.setVisibility(View.GONE);
+            testConnectionButton.setVisibility(View.GONE);
+        } else {
+            apiUrlInput.setText(sessionManager.getApiBaseUrl());
+            testConnectionButton.setOnClickListener(view -> testConnection());
+        }
         loginButton.setOnClickListener(view -> login());
-        testConnectionButton.setOnClickListener(view -> testConnection());
         passwordInput.setOnEditorActionListener((view, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 login();
@@ -61,7 +69,9 @@ public final class LoginActivity extends Activity {
     private void login() {
         String username = valueOf(usernameInput);
         String password = valueOf(passwordInput);
-        saveApiAddress();
+        if (!BuildConfig.DEBUG) {
+            saveApiAddress();
+        }
         errorText.setTextColor(getColor(R.color.red_400));
         usernameInput.setError(username.isEmpty() ? "Vui lòng nhập tên đăng nhập." : null);
         passwordInput.setError(password.isEmpty() ? "Vui lòng nhập mật khẩu." : null);

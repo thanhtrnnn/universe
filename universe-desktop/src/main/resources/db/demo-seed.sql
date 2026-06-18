@@ -21,17 +21,17 @@ VALUES
      'student5', '123456', 'active', 'Student', 'anh@stu.universe'),
     ('S06', 'Đặng Thu Trang', '2005-12-12', 'Female', '0987654326',
      'student6', '123456', 'active', 'Student', 'trang@stu.universe')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblAdmin (id, department)
 VALUES ('A01', 'Phòng Đào tạo')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblLecturer (id, department, degree)
 VALUES
     ('GV01', 'Công nghệ Thông tin', 'Tiến sĩ'),
     ('GV02', 'An toàn Thông tin', 'Thạc sĩ')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblStudent (id, course, major, className)
 VALUES
@@ -41,7 +41,7 @@ VALUES
     ('S04', 'K23', 'Công nghệ thông tin', 'D23CQCN01-B'),
     ('S05', 'K23', 'Khoa học máy tính', 'D23CQAI01-B'),
     ('S06', 'K23', 'Khoa học máy tính', 'D23CQAI01-B')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblCourse (id, credits, name, department)
 VALUES
@@ -50,7 +50,7 @@ VALUES
     ('C03', 3, 'Nhập môn Trí tuệ Nhân tạo', 'Công nghệ Thông tin'),
     ('C04', 3, 'Cơ sở dữ liệu', 'Công nghệ Thông tin'),
     ('C05', 3, 'Mạng máy tính', 'An toàn Thông tin')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblClassSection
     (id, classId, name, semester, year, maxStudents, status, tblCourseid, tblLecturerid)
@@ -60,7 +60,7 @@ VALUES
     ('CS03', 'INT3401.01', 'Nhập môn Trí tuệ Nhân tạo - Nhóm 01', 'HK2', '2025-2026', 45, 'open', 'C03', 'GV01'),
     ('CS04', 'INT1313.01', 'Cơ sở dữ liệu - Nhóm 01', 'HK2', '2025-2026', 40, 'open', 'C04', 'GV02'),
     ('CS05', 'INT1336.01', 'Mạng máy tính - Nhóm 01', 'HK2', '2025-2026', 40, 'open', 'C05', 'GV02')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblSchedule
     (id, dayOfWeek, startPeriod, endPeriod, room, appliedFrom, appliedTo, tblClassSectionid)
@@ -70,7 +70,7 @@ VALUES
     ('SCH03', 'Tuesday', 1, 3, 'A303', '2026-01-12', '2026-06-30', 'CS03'),
     ('SCH04', 'Thursday', 7, 9, 'A205', '2026-01-12', '2026-06-30', 'CS04'),
     ('SCH05', 'Friday', 4, 6, 'B304', '2026-01-12', '2026-06-30', 'CS05')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblQRCode
     (id, createdAt, expiredAt, latitude, longitude, radius, status)
@@ -80,7 +80,7 @@ VALUES
     ('QR02', CURRENT_TIMESTAMP - INTERVAL '2 days',
      CURRENT_TIMESTAMP - INTERVAL '2 days' + INTERVAL '15 minutes',
      21.028511, 105.804817, 50, 'inactive')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblClassSession
     (id, date, startPeriod, endPeriod, room, status, tblQRCodeid, tblClassSectionid)
@@ -89,7 +89,7 @@ VALUES
     ('SES02', CURRENT_DATE - 2, 1, 3, 'A303', 'closed', 'QR02', 'CS03'),
     ('SES03', CURRENT_DATE - 1, 4, 6, 'B202', 'closed', NULL, 'CS02'),
     ('SES04', CURRENT_DATE, 7, 9, 'A205', 'created', NULL, 'CS04')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblCourseRecord
     (id, enrolledAt, status, score1, score2, score3, examScore, tblStudentid, tblClassSectionid)
@@ -104,7 +104,7 @@ VALUES
     ('CR08', '2026-01-08', 'Registered', 8.5, 8.0, NULL, NULL, 'S06', 'CS03'),
     ('CR09', '2026-01-08', 'Registered', NULL, NULL, NULL, NULL, 'S04', 'CS04'),
     ('CR10', '2026-01-08', 'Registered', NULL, NULL, NULL, NULL, 'S05', 'CS05')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblAttendance
     (id, attendedAt, latitude, longitude, method, status, tblClassSessionid, tblStudentid)
@@ -117,7 +117,7 @@ VALUES
      21.028509, 105.804820, 'QR', 'PRESENT', 'SES02', 'S02'),
     ('ATT04', CURRENT_TIMESTAMP - INTERVAL '2 days',
      NULL, NULL, 'MANUAL', 'PRESENT', 'SES02', 'S03')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO tblNotification
     (id, title, content, recipientType, sentAt, tblUserid)
@@ -161,4 +161,4 @@ VALUES
     ('NTF13', 'Có điểm thi mới',
      'Môn Nhập môn CNPM đã có điểm thi. Vui lòng kiểm tra trên hệ thống.',
      'class:CS01', CURRENT_TIMESTAMP - INTERVAL '2 hours', 'S01')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT DO NOTHING;

@@ -9,3 +9,8 @@ dependency-reduced-pom.xml
 
 # OS
 .DS_Store
+
+# Secrets / credentials — KHÔNG commit
+src/main/resources/app.properties
+*.crt
+*.pem

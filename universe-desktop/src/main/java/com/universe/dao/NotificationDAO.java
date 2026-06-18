@@ -33,6 +33,9 @@ public class NotificationDAO extends DAO {
         if (n.getSentAt() == null) {
             n.setSentAt(LocalDateTime.now());
         }
+        if (!KafkaUtil.enabled()) {
+            return insert(n); // Kafka tắt: ghi thẳng DB
+        }
         try {
             KafkaUtil.publish(GSON.toJson(NotificationPayload.from(n)));
             return true;

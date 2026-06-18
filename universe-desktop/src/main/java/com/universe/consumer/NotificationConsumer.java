@@ -32,6 +32,11 @@ public class NotificationConsumer {
 
     /** Khởi động consumer trên thread daemon (nhúng vào app desktop). */
     public static void startInBackground() {
+        if (!com.universe.util.KafkaUtil.enabled()) {
+            System.out.println("[NotificationConsumer] Kafka tắt (kafka.enabled=false) - "
+                    + "bỏ qua consumer; thông báo được ghi thẳng vào DB.");
+            return;
+        }
         Thread t = new Thread(NotificationConsumer::run, "notification-consumer");
         t.setDaemon(true);
         t.start();
@@ -53,6 +58,7 @@ public class NotificationConsumer {
         props.put("value.deserializer", StringDeserializer.class.getName());
         props.put("auto.offset.reset", "earliest");
         props.put("enable.auto.commit", "true");
+        com.universe.util.KafkaUtil.applySecurity(props);
 
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
             consumer.subscribe(Collections.singletonList(KafkaTopic()));

@@ -1,6 +1,7 @@
 package com.universe.util;
 
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.Jedis;
 
 import java.util.UUID;
@@ -15,11 +16,20 @@ import java.util.UUID;
  */
 public final class RedisUtil {
 
-    private static final JedisPool POOL =
-            new JedisPool(AppConfig.get("redis.host", "localhost"),
-                          AppConfig.getInt("redis.port", 6379));
+    private static final JedisPool POOL = createPool();
 
     private static final int TTL = AppConfig.getInt("redis.session.ttl", 900);
+
+    /** Hỗ trợ Redis cloud: có mật khẩu (AUTH) và tuỳ chọn TLS. */
+    private static JedisPool createPool() {
+        String host = AppConfig.get("redis.host", "localhost");
+        int port = AppConfig.getInt("redis.port", 6379);
+        int timeout = AppConfig.getInt("redis.timeout", 2000);
+        boolean ssl = Boolean.parseBoolean(AppConfig.get("redis.ssl", "false"));
+        String password = AppConfig.get("redis.password", "");
+        String auth = (password == null || password.isBlank()) ? null : password;
+        return new JedisPool(new JedisPoolConfig(), host, port, timeout, auth, 0, ssl);
+    }
 
     private RedisUtil() {
     }

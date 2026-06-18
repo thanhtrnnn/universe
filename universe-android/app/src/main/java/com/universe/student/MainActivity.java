@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.text.InputType;
@@ -25,6 +26,8 @@ import com.universe.student.data.Models;
 import com.universe.student.data.SessionManager;
 import com.universe.student.data.StudentRepository;
 import com.universe.student.location.DeviceLocationProvider;
+import com.universe.student.notify.NotificationHelper;
+import com.universe.student.notify.NotificationScheduler;
 import com.universe.student.ui.CardFactory;
 
 import java.util.List;
@@ -34,6 +37,7 @@ public final class MainActivity extends Activity {
 
     private static final int REQUEST_SCAN_QR = 1001;
     private static final int REQUEST_LOCATION_PERMISSION = 1002;
+    private static final int REQUEST_NOTIFICATION_PERMISSION = 1003;
 
     private LinearLayout contentContainer;
     private ProgressBar contentProgress;
@@ -70,6 +74,20 @@ public final class MainActivity extends Activity {
                         new Intent(this, QrScanActivity.class),
                         REQUEST_SCAN_QR));
         loadHome();
+
+        // Thông báo đẩy: tạo kênh, xin quyền (Android 13+) và lập lịch kiểm tra nền.
+        NotificationHelper.ensureChannel(this);
+        ensureNotificationPermission();
+        NotificationScheduler.start(this);
+    }
+
+    private void ensureNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    REQUEST_NOTIFICATION_PERMISSION);
+        }
     }
 
     private void configureNavigation() {
@@ -523,6 +541,7 @@ public final class MainActivity extends Activity {
     }
 
     private void clearSessionAndExit() {
+        NotificationScheduler.stop(this);
         sessionManager.clear();
         openLogin();
     }

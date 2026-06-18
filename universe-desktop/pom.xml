@@ -43,6 +43,13 @@
             <version>42.7.3</version>
         </dependency>
 
+        <!-- HikariCP - connection pool (tái dùng kết nối tới Render, hết lag đổi tab) -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+
         <!-- ZXing - tạo ảnh mã QR (chức năng 7) -->
         <dependency>
             <groupId>com.google.zxing</groupId>
@@ -66,7 +73,8 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>3.7.0</version>
+            <!-- 3.9.x: vá lỗi 'getSubject is not supported' của SASL trên JDK 23+ -->
+            <version>3.9.1</version>
         </dependency>
 
         <!-- Gson - serialize payload JSON cho Kafka -->
