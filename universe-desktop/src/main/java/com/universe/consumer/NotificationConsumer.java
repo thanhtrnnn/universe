@@ -37,6 +37,9 @@ public class NotificationConsumer {
                     + "bỏ qua consumer; thông báo được ghi thẳng vào DB.");
             return;
         }
+        System.out.println("[NotificationConsumer] Kafka bật - khởi động consumer nền, "
+                + "lắng nghe topic " + KafkaTopic()
+                + " @ " + AppConfig.get("kafka.bootstrap", "localhost:9092"));
         Thread t = new Thread(NotificationConsumer::run, "notification-consumer");
         t.setDaemon(true);
         t.start();
@@ -62,6 +65,8 @@ public class NotificationConsumer {
 
         try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props)) {
             consumer.subscribe(Collections.singletonList(KafkaTopic()));
+            System.out.println("[NotificationConsumer] Đã kết nối broker & subscribe topic "
+                    + KafkaTopic() + " - sẵn sàng nhận thông báo.");
             while (running) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
                 for (ConsumerRecord<String, String> record : records) {
