@@ -99,6 +99,21 @@ app\build\outputs\apk\debug\app-debug.apk
 
 ## 4. Cấu hình (khi đổi máy / đổi dịch vụ)
 
+### Các file env / cấu hình quan trọng
+
+| File | Nội dung | Commit? |
+|------|----------|---------|
+| `NOTE.md` | **Tất cả** thông tin kết nối: Render Postgres, Redis Cloud, DigitalOcean Kafka (host/user/password) | ❌ gitignore |
+| `universe-desktop/src/main/resources/app.properties` | Cấu hình DB / Redis / Kafka / API cho **desktop** (chứa secret) | ❌ gitignore |
+| `universe-desktop/do-kafka-ca.crt` | Chứng chỉ CA của DigitalOcean Kafka (TLS) | ❌ gitignore |
+| `universe-android/gradle.properties` | `UNIVERSE_API_BASE_URL` — URL backend cho app Android | ✅ commit (không phải secret) |
+| Render Dashboard → mobile-api → **Environment** | Biến môi trường backend (`DATABASE_URL`, …) cấu hình trực tiếp trên Render | — (trên Render) |
+
+> 🔑 **Lấy secret chi tiết** (mật khẩu DB/Redis/Kafka, file `do-kafka-ca.crt`, biến env trên Render):
+> liên hệ **@BidenJr**. Các file trên đã được `.gitignore` nên repo **không** chứa giá trị thật.
+
+### Mẫu `app.properties`
+
 Sửa `universe-desktop/src/main/resources/app.properties`:
 
 ```properties
