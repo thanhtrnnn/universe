@@ -5,6 +5,12 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Properties;
 
 /**
@@ -23,14 +29,31 @@ public final class KafkaUtil {
     private static final String TOPIC =
             AppConfig.get("kafka.topic.notifications", "universe.notifications");
 
-    private static final Producer<String, String> PRODUCER = ENABLED ? createProducer() : null;
+    private static final Producer<String, String> PRODUCER = ENABLED ? createProducerSafe() : null;
+
+    /** CA đã trích ra file tạm (cache để khỏi trích nhiều lần). */
+    private static volatile String cachedTruststore;
 
     private KafkaUtil() {
     }
 
-    /** Kafka có được bật không (kafka.enabled). Tắt = ghi thẳng DB, không cần broker. */
+    /**
+     * Kafka có dùng được không. Bật trong cấu hình VÀ producer khởi tạo thành công.
+     * Nếu init lỗi (vd thiếu CA), trả false để app tự ghi thẳng DB thay vì treo.
+     */
     public static boolean enabled() {
-        return ENABLED;
+        return ENABLED && PRODUCER != null;
+    }
+
+    /** Khởi tạo producer nhưng KHÔNG để lỗi làm chết app (trước đây throw -> Failed to launch JVM). */
+    private static Producer<String, String> createProducerSafe() {
+        try {
+            return createProducer();
+        } catch (Exception e) {
+            System.err.println("[KafkaUtil] Không khởi tạo được Kafka producer: " + e.getMessage()
+                    + " -> tắt Kafka, thông báo sẽ ghi thẳng vào DB.");
+            return null;
+        }
     }
 
     private static Producer<String, String> createProducer() {
@@ -66,8 +89,44 @@ public final class KafkaUtil {
         putIfPresent(props, "sasl.jaas.config", "kafka.sasl.jaas.config");
         // TLS/CA cho broker dùng CA riêng (DigitalOcean). PEM => không cần keytool/JKS.
         putIfPresent(props, "ssl.truststore.type", "kafka.ssl.truststore.type");
-        putIfPresent(props, "ssl.truststore.location", "kafka.ssl.truststore.location");
+        String truststore = resolveTruststore();
+        if (truststore != null) {
+            props.put("ssl.truststore.location", truststore);
+        }
         putIfPresent(props, "ssl.truststore.password", "kafka.ssl.truststore.password");
+    }
+
+    /**
+     * Trả về đường dẫn file CA dùng cho TLS, theo thứ tự ưu tiên:
+     *  1) {@code kafka.ssl.truststore.location} nếu file tồn tại trên đĩa (máy dev).
+     *  2) Trích CA bundle ({@code kafka.ssl.truststore.resource}) từ trong jar ra file tạm
+     *     -> giúp .exe/.jar chạy được trên MÁY KHÁC không có đường dẫn tuyệt đối.
+     * Trả {@code null} nếu không có CA nào (bỏ qua, để Kafka tự báo lỗi nếu cần).
+     */
+    private static String resolveTruststore() {
+        if (cachedTruststore != null) {
+            return cachedTruststore;
+        }
+        String configured = AppConfig.get("kafka.ssl.truststore.location", "");
+        if (configured != null && !configured.isBlank() && Files.exists(Paths.get(configured))) {
+            cachedTruststore = configured;
+            return cachedTruststore;
+        }
+        String resource = AppConfig.get("kafka.ssl.truststore.resource", "do-kafka-ca.crt");
+        try (InputStream in = KafkaUtil.class.getClassLoader().getResourceAsStream(resource)) {
+            if (in == null) {
+                System.err.println("[KafkaUtil] Không tìm thấy CA '" + resource + "' trong classpath.");
+                return null;
+            }
+            Path tmp = Files.createTempFile("do-kafka-ca", ".crt");
+            tmp.toFile().deleteOnExit();
+            Files.copy(in, tmp, StandardCopyOption.REPLACE_EXISTING);
+            cachedTruststore = tmp.toAbsolutePath().toString();
+            return cachedTruststore;
+        } catch (IOException e) {
+            System.err.println("[KafkaUtil] Lỗi trích CA ra file tạm: " + e.getMessage());
+            return null;
+        }
     }
 
     private static void putIfPresent(Properties props, String kafkaKey, String configKey) {
