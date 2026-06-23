@@ -3,6 +3,7 @@ package com.universe.view;
 import com.universe.dao.CourseDAO;
 import com.universe.entity.Course;
 
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -18,7 +19,7 @@ import javafx.stage.Stage;
 /**
  * Giao diện thêm mới học phần (CreateCourseFrm).
  */
-public class CreateCourseFrm extends Stage {
+public class CreateCourseFrm extends Stage implements ActionListener {
 
     private final CourseDAO courseDAO = new CourseDAO();
     private final Runnable onCreated;
@@ -27,6 +28,9 @@ public class CreateCourseFrm extends Stage {
     private final TextField inName = new TextField();
     private final TextField inCredits = new TextField();
     private final TextField inDepartment = new TextField();
+
+    private final Button btnSave = new Button("Lưu học phần");
+    private final Button btnCancel = new Button("Hủy");
 
     public CreateCourseFrm(Runnable onCreated) {
         this.onCreated = onCreated;
@@ -57,13 +61,11 @@ public class CreateCourseFrm extends Stage {
                 createFormRow("Khoa quản lý", inDepartment)
         );
 
-        Button btnSave = new Button("Lưu học phần");
         btnSave.getStyleClass().add("btn-primary");
-        btnSave.setOnAction(e -> save());
+        btnSave.setOnAction(this);
 
-        Button btnCancel = new Button("Hủy");
         btnCancel.getStyleClass().add("btn-secondary");
-        btnCancel.setOnAction(e -> close());
+        btnCancel.setOnAction(this);
 
         HBox actions = new HBox(12, btnSave, btnCancel);
         actions.setAlignment(Pos.CENTER_RIGHT);
@@ -87,6 +89,16 @@ public class CreateCourseFrm extends Stage {
         
         row.getChildren().addAll(lbl, input);
         return row;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object src = e.getSource();
+        if (src == btnSave) {
+            save();
+        } else if (src == btnCancel) {
+            close();
+        }
     }
 
     private void save() {

@@ -9,6 +9,7 @@ import com.universe.entity.User;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -27,7 +28,7 @@ import java.util.List;
 /**
  * Giao diện đăng ký lớp học phần (ClassSectionRegistrationFrm).
  */
-public class ClassSectionRegistrationFrm extends VBox {
+public class ClassSectionRegistrationFrm extends VBox implements ActionListener {
 
     private final User currentUser;
     private final Course course;
@@ -36,6 +37,9 @@ public class ClassSectionRegistrationFrm extends VBox {
 
     private final TableView<ClassSection> tblClass = new TableView<>();
     private final ObservableList<ClassSection> data = FXCollections.observableArrayList();
+
+    private final Button btnBack = new Button("🡠 Quay lại");
+    private final Button btnRegister = new Button("Xác nhận đăng ký");
 
     public ClassSectionRegistrationFrm(User currentUser, Course course) {
         this.currentUser = currentUser;
@@ -58,16 +62,14 @@ public class ClassSectionRegistrationFrm extends VBox {
         HBox controls = new HBox(16);
         controls.setAlignment(Pos.CENTER_LEFT);
 
-        Button btnBack = new Button("🡠 Quay lại");
         btnBack.getStyleClass().add("btn-secondary");
-        btnBack.setOnAction(e -> back());
+        btnBack.setOnAction(this);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button btnRegister = new Button("Xác nhận đăng ký");
         btnRegister.getStyleClass().add("btn-primary");
-        btnRegister.setOnAction(e -> registerClass());
+        btnRegister.setOnAction(this);
 
         controls.getChildren().addAll(btnBack, spacer, btnRegister);
 
@@ -127,6 +129,16 @@ public class ClassSectionRegistrationFrm extends VBox {
         tableCard.getChildren().add(tblClass);
 
         getChildren().addAll(header, controls, tableCard);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object src = e.getSource();
+        if (src == btnBack) {
+            back();
+        } else if (src == btnRegister) {
+            registerClass();
+        }
     }
 
     private void loadData() {

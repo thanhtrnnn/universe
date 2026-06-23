@@ -22,11 +22,23 @@ android {
         buildConfig true
     }
 
+    signingConfigs {
+        // Quick demo signing: reuse the standard Android debug keystore so the
+        // release APK is installable. NOT for Play Store / production distribution.
+        demo {
+            storeFile file("${System.properties['user.home']}/.android/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
+            signingConfig signingConfigs.demo
         }
     }
 

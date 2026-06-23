@@ -8,6 +8,7 @@ import com.universe.entity.Course;
 import com.universe.entity.User;
 
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -23,7 +24,7 @@ import javafx.stage.Stage;
 /**
  * Giao diện sửa Lớp Học phần (UpdateClassSectionFrm).
  */
-public class UpdateClassSectionFrm extends Stage {
+public class UpdateClassSectionFrm extends Stage implements ActionListener {
 
     private final ClassSection classSection;
     private final ClassSectionDAO classSectionDAO = new ClassSectionDAO();
@@ -39,6 +40,9 @@ public class UpdateClassSectionFrm extends Stage {
     private final ComboBox<String> inStatus = new ComboBox<>(FXCollections.observableArrayList("open", "full", "closed"));
     private final ComboBox<Course> inCourse = new ComboBox<>();
     private final ComboBox<User> inLecturer = new ComboBox<>();
+
+    private final Button btnSave = new Button("Lưu thay đổi");
+    private final Button btnCancel = new Button("Hủy");
 
     public UpdateClassSectionFrm(ClassSection classSection, Runnable onSaved) {
         this.classSection = classSection;
@@ -80,13 +84,11 @@ public class UpdateClassSectionFrm extends Stage {
 
         form.getChildren().addAll(row1, row2, row3, row4);
 
-        Button btnSave = new Button("Lưu thay đổi");
         btnSave.getStyleClass().add("btn-primary");
-        btnSave.setOnAction(e -> save());
+        btnSave.setOnAction(this);
 
-        Button btnCancel = new Button("Hủy");
         btnCancel.getStyleClass().add("btn-secondary");
-        btnCancel.setOnAction(e -> close());
+        btnCancel.setOnAction(this);
 
         HBox actions = new HBox(12, btnSave, btnCancel);
         actions.setAlignment(Pos.CENTER_RIGHT);
@@ -110,6 +112,16 @@ public class UpdateClassSectionFrm extends Stage {
         
         row.getChildren().addAll(lbl, input);
         return row;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        Object src = e.getSource();
+        if (src == btnSave) {
+            save();
+        } else if (src == btnCancel) {
+            close();
+        }
     }
 
     private void save() {
