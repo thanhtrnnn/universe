@@ -17,6 +17,12 @@ public final class CardFactory {
 
     public static View dataCard(Context context, String title, String subtitle, String meta) {
         View card = LayoutInflater.from(context).inflate(R.layout.view_data_card, null, false);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        int margin = Math.round(12 * context.getResources().getDisplayMetrics().density);
+        params.bottomMargin = margin;
+        card.setLayoutParams(params);
         setText(card, R.id.cardTitle, title);
         setText(card, R.id.cardSubtitle, subtitle);
         setText(card, R.id.cardMeta, meta);
@@ -32,10 +38,15 @@ public final class CardFactory {
         action.setOnClickListener(listener);
     }
 
-    public static View statCard(Context context, String value, String label) {
+    public static View statCard(Context context, String value, String label, boolean isLast) {
         View card = LayoutInflater.from(context).inflate(R.layout.view_stat_card, null, false);
-        card.setLayoutParams(new LinearLayout.LayoutParams(
-                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.MATCH_PARENT, 1f);
+        if (!isLast) {
+            int margin = Math.round(8 * context.getResources().getDisplayMetrics().density);
+            params.setMarginEnd(margin);
+        }
+        card.setLayoutParams(params);
         setText(card, R.id.statValue, value);
         setText(card, R.id.statLabel, label);
         return card;

@@ -91,15 +91,15 @@ public final class LecturerActivity extends Activity {
                 stats.addView(CardFactory.statCard(
                         LecturerActivity.this,
                         String.valueOf(dashboard.classCount),
-                        "LỚP PHỤ TRÁCH"));
+                        "LỚP PHỤ TRÁCH", false));
                 stats.addView(CardFactory.statCard(
                         LecturerActivity.this,
                         String.valueOf(dashboard.studentCount),
-                        "SINH VIÊN"));
+                        "SINH VIÊN", false));
                 stats.addView(CardFactory.statCard(
                         LecturerActivity.this,
                         String.valueOf(dashboard.scheduleCount),
-                        "LỊCH TRONG TUẦN"));
+                        "LỊCH TRONG TUẦN", true));
                 contentContainer.addView(stats, marginParams(0, 0, 0, 22));
 
                 addSectionTitle("Lớp học phần phụ trách");
