@@ -16,6 +16,10 @@
         <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>17.0.14</javafx.version>
+        <!-- Cờ JVM cho test. Mặc định chỉ bật ByteBuddy experimental (an toàn trên
+             MỌI JDK, kể cả 17). Trên JDK >= 21 profile bên dưới bổ sung thêm cờ
+             EnableDynamicAgentLoading để tắt cảnh báo nạp agent động của Mockito. -->
+        <test.argLine>-Dnet.bytebuddy.experimental=true</test.argLine>
     </properties>
 
     <dependencies>
@@ -90,6 +94,28 @@
             <artifactId>slf4j-nop</artifactId>
             <version>1.7.36</version>
         </dependency>
+
+        <!-- ====== Unit test (JUnit 5 + Mockito) ====== -->
+        <!-- Kiểm thử tầng DAO bằng cách mock JDBC (Connection/PreparedStatement/
+             ResultSet) nên KHÔNG cần DB/Kafka/Redis thật -> chạy nhanh, độc lập. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.14.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.14.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -99,6 +125,18 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+            </plugin>
+
+            <!-- Surefire chạy unit test JUnit 5 khi `mvn test` -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <!-- Cho phép Mockito/ByteBuddy chạy trên JDK mới (vd 24).
+                         Nội dung do property test.argLine quyết định theo JDK. -->
+                    <argLine>${test.argLine}</argLine>
+                </configuration>
             </plugin>
 
             <!-- JavaFX Maven Plugin - chạy app bằng mvn javafx:run -->
@@ -142,4 +180,18 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- JDK >= 21: bổ sung cờ tắt cảnh báo nạp agent động của Mockito.
+             Cờ này KHÔNG tồn tại trên JDK 17 nên chỉ thêm khi đủ phiên bản. -->
+        <profile>
+            <id>jdk21plus</id>
+            <activation>
+                <jdk>[21,)</jdk>
+            </activation>
+            <properties>
+                <test.argLine>-Dnet.bytebuddy.experimental=true -XX:+EnableDynamicAgentLoading</test.argLine>
+            </properties>
+        </profile>
+    </profiles>
 </project>

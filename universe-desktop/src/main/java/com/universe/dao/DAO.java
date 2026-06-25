@@ -12,9 +12,9 @@ import java.sql.SQLException;
  */
 public abstract class DAO {
 
-    protected Connection con;          // -con: Connection   (theo class diagram)
+    protected Connection con;
 
-    public DAO() {                     // DAO()              (theo class diagram)
+    public DAO() {
     }
 
     /** Mượn 1 connection từ pool HikariCP. */
