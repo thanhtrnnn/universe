@@ -393,9 +393,9 @@ final class StudentService {
 
                 double distance = QrVerifier.distanceMeters(
                         latitude, longitude,
-                        sessionQr.latitude(), sessionQr.longitude());
+                        sessionQr.latitude(), sessionQr.longitude()); // Haversine
                 double allowedRadius = GeofencePolicy.effectiveRadius(sessionQr.radius());
-                boolean isInside = GeofencePolicy.isInside(distance, sessionQr.radius());
+                boolean isInside = GeofencePolicy.isInside(distance, sessionQr.radius()); // Geofence
 
                 String existingStatus = null;
                 String existingId = null;

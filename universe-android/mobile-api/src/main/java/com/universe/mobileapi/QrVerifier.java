@@ -58,6 +58,7 @@ final class QrVerifier {
         }
     }
 
+    // Haversine
     static double distanceMeters(double latitude1, double longitude1,
                                  double latitude2, double longitude2) {
         double earthRadius = 6_371_000;
