@@ -121,7 +121,7 @@ public class AttendanceManageFrm extends VBox {
         TableColumn<Attendance, String> colStatus = new TableColumn<>("Trạng thái");
         colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
         colStatus.setCellFactory(column -> new javafx.scene.control.TableCell<>() {
-            private final ComboBox<String> combo = new ComboBox<>(FXCollections.observableArrayList("PRESENT", "ABSENT", "LATE", "OUT_OF_RANGE"));
+            private final ComboBox<String> combo = new ComboBox<>(FXCollections.observableArrayList("PRESENT", "ABSENT", "LATE"));
             {
                 combo.setOnAction(e -> {
                     Attendance a = getTableRow().getItem();
@@ -192,16 +192,11 @@ public class AttendanceManageFrm extends VBox {
             FxHelper.showWarning("Không có dữ liệu điểm danh để lưu.");
             return;
         }
-        boolean ok = true;
-        for (Attendance a : data) {
-            if (!attendanceDAO.markManualAttendance(a)) {
-                ok = false;
-            }
-        }
-        if (ok) {
+        try {
+            attendanceDAO.markManualAttendanceBatch(new java.util.ArrayList<>(data));
             FxHelper.showInfo("Lưu trạng thái điểm danh thành công!");
-        } else {
-            FxHelper.showError("Có lỗi xảy ra khi lưu điểm danh.");
+        } catch (RuntimeException ex) {
+            FxHelper.showError("Có lỗi xảy ra khi lưu điểm danh. Không có thay đổi nào được ghi lại.");
         }
     }
 }

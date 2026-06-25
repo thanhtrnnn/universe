@@ -198,4 +198,15 @@ public final class FxHelper {
         badge.getStyleClass().addAll("badge", "badge-" + status);
         return badge;
     }
+
+    /** Hiện hộp thoại xác nhận OK/Hủy. Trả về true nếu người dùng chọn OK. */
+    public static boolean showConfirm(String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, message,
+                javafx.scene.control.ButtonType.OK, javafx.scene.control.ButtonType.CANCEL);
+        alert.setTitle("Xác nhận");
+        alert.setHeaderText(null);
+        styleAlert(alert);
+        return alert.showAndWait().orElse(javafx.scene.control.ButtonType.CANCEL)
+                == javafx.scene.control.ButtonType.OK;
+    }
 }

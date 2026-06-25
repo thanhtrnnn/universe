@@ -1,6 +1,5 @@
 package com.universe.mobileapi;
 
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 
@@ -34,24 +33,25 @@ final class QrVerifier {
         }
     }
 
-    static boolean hasValidSignature(ParsedQr qr, long currentTimeMillis) {
+    static boolean hasValidSignature(ParsedQr qr, long currentTimeMillis, String secret) {
         long currentSlot = currentTimeMillis / (ROTATION_SECONDS * 1000L);
         if (Math.abs(currentSlot - qr.timeSlot()) > ALLOWED_SLOT_SKEW) {
             return false;
         }
-
-        String expected = signature(qr.qrId(), qr.sessionId(), qr.timeSlot());
+        String expected = signature(qr.qrId(), qr.sessionId(), qr.timeSlot(), secret);
         return MessageDigest.isEqual(
-                expected.getBytes(StandardCharsets.US_ASCII),
-                qr.signature().getBytes(StandardCharsets.US_ASCII));
+                expected.getBytes(java.nio.charset.StandardCharsets.US_ASCII),
+                qr.signature().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
     }
 
-    static String signature(String qrId, String sessionId, long timeSlot) {
+    static String signature(String qrId, String sessionId, long timeSlot, String secret) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            mac.init(new javax.crypto.spec.SecretKeySpec(
+                    secret.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] hash = mac.doFinal(
                     (qrId + "|" + sessionId + "|" + timeSlot)
-                            .getBytes(StandardCharsets.UTF_8));
+                            .getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash, 0, 8);
         } catch (Exception ex) {
             throw new IllegalStateException("Không thể kiểm tra chữ ký QR.", ex);

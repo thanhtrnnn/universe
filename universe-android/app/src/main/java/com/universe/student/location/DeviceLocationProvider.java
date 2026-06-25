@@ -5,6 +5,8 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -12,10 +14,12 @@ import com.google.android.gms.location.Priority;
 import com.google.android.gms.tasks.CancellationTokenSource;
 
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DeviceLocationProvider {
 
     public static final float MAX_ACCEPTABLE_ACCURACY_METERS = 50f;
+    private static final long GPS_TIMEOUT_MS = 30_000;
 
     public interface Callback {
         void onLocation(Location location);
@@ -24,6 +28,7 @@ public final class DeviceLocationProvider {
 
     private final FusedLocationProviderClient fusedLocationClient;
     private final LocationManager locationManager;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     public DeviceLocationProvider(Context context) {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
@@ -48,9 +53,23 @@ public final class DeviceLocationProvider {
             return;
         }
 
+        AtomicBoolean done = new AtomicBoolean(false);
         CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+        Runnable timeoutRunnable = () -> {
+            if (done.compareAndSet(false, true)) {
+                cancellationTokenSource.cancel();
+                callback.onError(
+                        "Không lấy được vị trí trong 30 giây. "
+                                + "Hãy bật Vị trí chính xác, Wi-Fi và thử lại.");
+            }
+        };
+        handler.postDelayed(timeoutRunnable, GPS_TIMEOUT_MS);
+
         fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, cancellationTokenSource.getToken())
                 .addOnSuccessListener(location -> {
+                    if (!done.compareAndSet(false, true)) return;
+                    handler.removeCallbacks(timeoutRunnable);
                     if (location != null) {
                         if (hasAccuracyAtMost(location, maximumAccuracyMeters)) {
                             callback.onLocation(location);
@@ -58,10 +77,14 @@ public final class DeviceLocationProvider {
                             callback.onError(accuracyError(location, maximumAccuracyMeters));
                         }
                     } else {
-                        callback.onError("Không thể lấy được vị trí hiện tại. Thử ở khu vực tín hiệu tốt hơn.");
+                        callback.onError(
+                                "Không thể lấy được vị trí hiện tại. "
+                                        + "Hãy bật Vị trí chính xác, Wi-Fi và thử ở gần cửa sổ.");
                     }
                 })
                 .addOnFailureListener(e -> {
+                    if (!done.compareAndSet(false, true)) return;
+                    handler.removeCallbacks(timeoutRunnable);
                     callback.onError("Lỗi khi lấy vị trí: " + e.getMessage());
                 });
     }

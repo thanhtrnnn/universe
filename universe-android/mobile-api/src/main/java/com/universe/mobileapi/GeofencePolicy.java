@@ -17,7 +17,7 @@ final class GeofencePolicy {
 
     static boolean hasRequiredAccuracy(double accuracy) {
         return Double.isFinite(accuracy)
-                && accuracy >= 0
+                && accuracy > 0
                 && accuracy <= MAX_LOCATION_ACCURACY_METERS;
     }
 

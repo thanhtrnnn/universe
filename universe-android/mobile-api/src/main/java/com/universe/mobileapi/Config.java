@@ -75,6 +75,10 @@ final class Config {
         return Boolean.parseBoolean(env("UNIVERSE_AUTO_MIGRATE", "false"));
     }
 
+    static String qrSigningSecret() {
+        return env("UNIVERSE_QR_SECRET", "universe-qr-dev-secret-change-in-production");
+    }
+
     static String[] credentialsFromUrl(String databaseUrl) {
         if (databaseUrl == null || databaseUrl.startsWith("jdbc:")) {
             return null;

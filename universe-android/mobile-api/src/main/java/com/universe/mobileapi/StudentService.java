@@ -360,7 +360,7 @@ final class StudentService {
                               double longitude, double accuracy) throws SQLException {
         validateDeviceLocation(latitude, longitude, accuracy);
         QrVerifier.ParsedQr parsedQr = QrVerifier.parse(payload);
-        if (!QrVerifier.hasValidSignature(parsedQr, System.currentTimeMillis())) {
+        if (!QrVerifier.hasValidSignature(parsedQr, System.currentTimeMillis(), Config.qrSigningSecret())) {
             throw new ServiceException(410, "Mã QR đã đổi hoặc không còn hiệu lực.");
         }
 
@@ -368,8 +368,9 @@ final class StudentService {
             connection.setAutoCommit(false);
             try {
                 try (PreparedStatement lock = connection.prepareStatement(
-                        "SELECT pg_advisory_xact_lock(hashtext(?))")) {
-                    lock.setString(1, parsedQr.sessionId() + "|" + studentId);
+                        "SELECT pg_advisory_xact_lock(hashtext(?), hashtext(?))")) {
+                    lock.setString(1, parsedQr.sessionId());
+                    lock.setString(2, studentId);
                     lock.executeQuery();
                 }
 
@@ -412,6 +413,9 @@ final class StudentService {
 
                 LocalDateTime now = LocalDateTime.now();
                 String newStatus = isInside ? "PRESENT" : "OUT_OF_RANGE";
+                // Preserve PRESENT status — don't downgrade if already confirmed in-room
+                String statusToSave = ("PRESENT".equals(existingStatus) && !isInside)
+                        ? "PRESENT" : newStatus;
 
                 if (existingId != null) {
                     try (PreparedStatement statement = connection.prepareStatement(
@@ -419,7 +423,7 @@ final class StudentService {
                         statement.setDouble(1, latitude);
                         statement.setDouble(2, longitude);
                         statement.setDouble(3, distance);
-                        statement.setString(4, newStatus);
+                        statement.setString(4, statusToSave);
                         statement.setTimestamp(5, Timestamp.valueOf(now));
                         statement.setString(6, existingId);
                         statement.executeUpdate();
