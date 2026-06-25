@@ -34,8 +34,6 @@ import javafx.util.Duration;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.format.DateTimeFormatter;
 import java.util.HexFormat;
 import java.util.List;
@@ -364,7 +362,7 @@ public class QRCodeFrm extends VBox {
             stopCalibration(true);
             setLocationLoading(false);
             setLocationStatus(
-                    "GPS điện thoại chưa đạt sai số tối đa 25 m.",
+                    "GPS điện thoại chưa đạt sai số tối đa " + (int) MAX_CALIBRATION_ACCURACY_METERS + " m.",
                     "location-status-error");
             return;
         }
@@ -413,6 +411,12 @@ public class QRCodeFrm extends VBox {
         if (selectedSession == null) {
             FxHelper.showWarning("Vui lòng chọn hoặc tạo một buổi học.");
             return;
+        }
+
+        if ("closed".equalsIgnoreCase(selectedSession.getStatus())) {
+            boolean confirm = FxHelper.showConfirm(
+                    "Buổi học này đã được đóng điểm danh. Bạn có muốn mở lại không?");
+            if (!confirm) return;
         }
 
         try {
@@ -495,9 +499,13 @@ public class QRCodeFrm extends VBox {
     }
 
     private String createSignature(String qrId, String sessionId, long timeSlot) throws Exception {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hash = digest.digest(
-                (qrId + "|" + sessionId + "|" + timeSlot).getBytes(StandardCharsets.UTF_8));
+        String secret = com.universe.util.AppConfig.get("qr.signing.secret", "universe-qr-dev-secret-change-in-production");
+        javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+        mac.init(new javax.crypto.spec.SecretKeySpec(
+                secret.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+        byte[] hash = mac.doFinal(
+                (qrId + "|" + sessionId + "|" + timeSlot)
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8));
         return HexFormat.of().formatHex(hash, 0, 8);
     }
 

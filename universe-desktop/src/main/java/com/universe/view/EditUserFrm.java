@@ -141,12 +141,27 @@ public class EditUserFrm extends Stage {
             return;
         }
 
+        String phone = inPhone.getText().trim();
+        if (!phone.isEmpty() && (phone.length() > 15 || !phone.matches("[0-9+\\-\\s()]{1,15}"))) {
+            FxHelper.showWarning("Số điện thoại không hợp lệ (tối đa 15 ký tự, chỉ chứa số và ký tự +,-,()");
+            return;
+        }
+        String email = inEmail.getText().trim();
+        if (!email.isEmpty() && !email.matches("^[\\w.%+\\-]+@[\\w.\\-]+\\.[a-zA-Z]{2,}$")) {
+            FxHelper.showWarning("Địa chỉ email không hợp lệ.");
+            return;
+        }
+
         user.setFullName(inFullName.getText().trim());
         user.setDob(inDob.getValue());
-        user.setGender(inGender.getValue());
+        if (inGender.getValue() != null) {
+            user.setGender(inGender.getValue());
+        }
+        if (inStatus.getValue() != null) {
+            user.setStatus(inStatus.getValue());
+        }
         user.setPhone(inPhone.getText().trim());
         user.setEmail(inEmail.getText().trim());
-        user.setStatus(inStatus.getValue());
 
         if (user instanceof Admin admin) {
             admin.setDepartment(inDepartment.getText().trim());
@@ -170,7 +185,7 @@ public class EditUserFrm extends Stage {
                 FxHelper.showError("Không tìm thấy người dùng cần cập nhật.");
             }
         } catch (RuntimeException ex) {
-            FxHelper.showError("Cập nhật thất bại: " + ex.getMessage());
+            FxHelper.showError("Cập nhật thất bại. Vui lòng kiểm tra lại thông tin đã nhập.");
         }
     }
 }

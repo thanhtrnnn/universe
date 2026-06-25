@@ -104,7 +104,7 @@ public class UserManageFrm extends VBox {
                     FxHelper.showError("Không thể xóa người dùng");
                 }
             } catch (Exception ex) {
-                FxHelper.showError("Lỗi khi xóa người dùng (Có thể dữ liệu đang được sử dụng): " + ex.getMessage());
+                FxHelper.showError("Không thể xóa người dùng. Có thể dữ liệu đang được sử dụng ở nơi khác.");
             }
         });
 

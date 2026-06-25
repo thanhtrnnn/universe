@@ -5,6 +5,7 @@ import com.universe.entity.Lecturer;
 import com.universe.entity.Student;
 import com.universe.entity.User;
 import com.universe.util.RedisUtil;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -29,22 +30,39 @@ public class UserDAO extends DAO {
             "LEFT JOIN tblStudent s ON s.id = u.id ";
 
     /**
-     * Xác thực đăng nhập. Khớp username + password trong tblUser.
+     * Xác thực đăng nhập. Khớp username trong tblUser, so sánh mật khẩu với bcrypt.
      * Khi thành công, lưu phiên vào Redis (session:{userId}).
      * @return User (đúng kiểu con theo role) hoặc null nếu sai / bị khóa.
      */
     public User checkLogin(String username, String password) {
-        String sql = USER_SELECT + "WHERE u.username = ? AND u.password = ?";
+        String sql = USER_SELECT + "WHERE u.username = ?";
         try (Connection con = getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setString(1, username);
-            ps.setString(2, password);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     if ("inactive".equalsIgnoreCase(rs.getString("status"))) {
                         return null; // tài khoản bị vô hiệu hóa
                     }
+                    String storedHash = rs.getString("password");
+                    boolean matched;
+                    if (storedHash != null && storedHash.startsWith("$2a$")) {
+                        // bcrypt hash
+                        matched = BCrypt.checkpw(password, storedHash);
+                    } else {
+                        // legacy plaintext
+                        matched = password.equals(storedHash);
+                        if (matched) {
+                            // silently upgrade to bcrypt
+                            String userId = rs.getString("id");
+                            updatePasswordHash(userId, BCrypt.hashpw(password, BCrypt.gensalt()));
+                        }
+                    }
+                    if (!matched) return null;
+
                     User u = mapUser(rs);
+                    // Store plaintext in-memory for LocationCalibrationClient in the UI layer
+                    u.setPassword(password);
                     // Bổ sung: lưu token phiên vào Redis
                     try {
                         RedisUtil.saveSession(u.getId());
@@ -103,7 +121,7 @@ public class UserDAO extends DAO {
                 ps.setString(4, u.getGender());
                 ps.setString(5, u.getPhone());
                 ps.setString(6, u.getUsername());
-                ps.setString(7, u.getPassword());
+                ps.setString(7, BCrypt.hashpw(u.getPassword(), BCrypt.gensalt()));
                 ps.setString(8, u.getStatus() != null ? u.getStatus() : "active");
                 ps.setString(9, u.getRole());
                 ps.setString(10, u.getEmail());
@@ -154,23 +172,29 @@ public class UserDAO extends DAO {
                      "WHERE id = ?";
         try (Connection con = getConnection()) {
             con.setAutoCommit(false);
-            try (PreparedStatement ps = con.prepareStatement(sql)) {
-                ps.setString(1, u.getFullName());
-                ps.setDate(2, u.getDob() != null ? java.sql.Date.valueOf(u.getDob()) : null);
-                ps.setString(3, u.getGender());
-                ps.setString(4, u.getPhone());
-                ps.setString(5, u.getEmail());
-                ps.setString(6, u.getStatus());
-                ps.setString(7, u.getId());
-                if (ps.executeUpdate() == 0) {
-                    con.rollback();
-                    return false;
+            try {
+                try (PreparedStatement ps = con.prepareStatement(sql)) {
+                    ps.setString(1, u.getFullName());
+                    ps.setDate(2, u.getDob() != null ? java.sql.Date.valueOf(u.getDob()) : null);
+                    ps.setString(3, u.getGender());
+                    ps.setString(4, u.getPhone());
+                    ps.setString(5, u.getEmail());
+                    ps.setString(6, u.getStatus());
+                    ps.setString(7, u.getId());
+                    if (ps.executeUpdate() == 0) {
+                        con.rollback();
+                        return false;
+                    }
                 }
+                updateRoleDetails(con, u);
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
             }
-
-            updateRoleDetails(con, u);
-            con.commit();
-            return true;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi updateUser: " + e.getMessage(), e);
         }
@@ -312,11 +336,24 @@ public class UserDAO extends DAO {
         u.setGender(rs.getString("gender"));
         u.setPhone(rs.getString("phone"));
         u.setUsername(rs.getString("username"));
-        u.setPassword(rs.getString("password"));
+        // password is NOT set here; checkLogin sets it explicitly after verification
         u.setStatus(rs.getString("status"));
         u.setRole(role);
         u.setEmail(rs.getString("email"));
         return u;
+    }
+
+    /** Silently upgrade a legacy plaintext password to bcrypt. */
+    private void updatePasswordHash(String userId, String hash) {
+        String sql = "UPDATE tblUser SET password = ? WHERE id = ?";
+        try (Connection con = getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, hash);
+            ps.setString(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            // non-critical migration; ignore failure
+        }
     }
 
     private void updateRoleDetails(Connection con, User u) throws SQLException {

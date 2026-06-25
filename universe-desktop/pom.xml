@@ -116,6 +116,13 @@
             <version>5.14.2</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- jBCrypt - mã hóa mật khẩu -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -28,7 +28,7 @@ public class QRCodeDAO extends DAO {
                              double radius, int validMinutes) {
         LocalDateTime now = LocalDateTime.now();
         QRCode qr = new QRCode(
-                "QR" + Long.toString(System.nanoTime(), 36).toUpperCase(),
+                "QR" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase(),
                 now,
                 now.plusMinutes(validMinutes),
                 latitude, longitude, radius,
@@ -39,31 +39,38 @@ public class QRCodeDAO extends DAO {
         String linkSession = "UPDATE tblClassSession SET tblQRCodeid = ?, status = 'open' WHERE id = ?";
         try (Connection con = getConnection()) {
             con.setAutoCommit(false);
-            if (session.getQrCodeId() != null) {
-                try (PreparedStatement ps = con.prepareStatement(
-                        "UPDATE tblQRCode SET status = 'inactive' WHERE id = ?")) {
-                    ps.setString(1, session.getQrCodeId());
+            try {
+                if (session.getQrCodeId() != null) {
+                    try (PreparedStatement ps = con.prepareStatement(
+                            "UPDATE tblQRCode SET status = 'inactive' WHERE id = ?")) {
+                        ps.setString(1, session.getQrCodeId());
+                        ps.executeUpdate();
+                    }
+                }
+                try (PreparedStatement ps = con.prepareStatement(insertQr)) {
+                    ps.setString(1, qr.getId());
+                    ps.setTimestamp(2, Timestamp.valueOf(qr.getCreatedAt()));
+                    ps.setTimestamp(3, Timestamp.valueOf(qr.getExpiredAt()));
+                    ps.setDouble(4, qr.getLatitude());
+                    ps.setDouble(5, qr.getLongitude());
+                    ps.setDouble(6, qr.getRadius());
+                    ps.setString(7, qr.getStatus());
                     ps.executeUpdate();
                 }
+                try (PreparedStatement ps = con.prepareStatement(linkSession)) {
+                    ps.setString(1, qr.getId());
+                    ps.setString(2, session.getId());
+                    ps.executeUpdate();
+                }
+                con.commit();
+                session.setQrCodeId(qr.getId());
+                return qr;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
             }
-            try (PreparedStatement ps = con.prepareStatement(insertQr)) {
-                ps.setString(1, qr.getId());
-                ps.setTimestamp(2, Timestamp.valueOf(qr.getCreatedAt()));
-                ps.setTimestamp(3, Timestamp.valueOf(qr.getExpiredAt()));
-                ps.setDouble(4, qr.getLatitude());
-                ps.setDouble(5, qr.getLongitude());
-                ps.setDouble(6, qr.getRadius());
-                ps.setString(7, qr.getStatus());
-                ps.executeUpdate();
-            }
-            try (PreparedStatement ps = con.prepareStatement(linkSession)) {
-                ps.setString(1, qr.getId());
-                ps.setString(2, session.getId());
-                ps.executeUpdate();
-            }
-            con.commit();
-            session.setQrCodeId(qr.getId());
-            return qr;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi generateQr: " + e.getMessage(), e);
         }
@@ -87,17 +94,24 @@ public class QRCodeDAO extends DAO {
         String closeSession = "UPDATE tblClassSession SET status = 'closed' WHERE id = ?";
         try (Connection con = getConnection()) {
             con.setAutoCommit(false);
-            try (PreparedStatement ps = con.prepareStatement(closeQr)) {
-                ps.setString(1, sessionId);
-                ps.executeUpdate();
+            try {
+                try (PreparedStatement ps = con.prepareStatement(closeQr)) {
+                    ps.setString(1, sessionId);
+                    ps.executeUpdate();
+                }
+                int updated;
+                try (PreparedStatement ps = con.prepareStatement(closeSession)) {
+                    ps.setString(1, sessionId);
+                    updated = ps.executeUpdate();
+                }
+                con.commit();
+                return updated > 0;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
             }
-            int updated;
-            try (PreparedStatement ps = con.prepareStatement(closeSession)) {
-                ps.setString(1, sessionId);
-                updated = ps.executeUpdate();
-            }
-            con.commit();
-            return updated > 0;
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi deactivateBySession: " + e.getMessage(), e);
         }

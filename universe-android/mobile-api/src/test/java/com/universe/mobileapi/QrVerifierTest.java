@@ -8,16 +8,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class QrVerifierTest {
 
+    private static final String TEST_SECRET = "test-secret";
+
     @Test
     void acceptsDesktopQrSignatureInCurrentSlot() {
         long now = System.currentTimeMillis();
         long slot = now / (QrVerifier.ROTATION_SECONDS * 1000L);
-        String signature = QrVerifier.signature("QR01", "SES01", slot);
+        String signature = QrVerifier.signature("QR01", "SES01", slot, TEST_SECRET);
         QrVerifier.ParsedQr qr = QrVerifier.parse(
                 "UNIVERSE|QR01|SES01|" + slot
                         + "|21.028511|105.804817|50.0|" + signature);
 
-        assertTrue(QrVerifier.hasValidSignature(qr, now));
+        assertTrue(QrVerifier.hasValidSignature(qr, now, TEST_SECRET));
         assertEquals("QR01", qr.qrId());
     }
 
@@ -25,12 +27,12 @@ class QrVerifierTest {
     void rejectsExpiredSlot() {
         long now = System.currentTimeMillis();
         long slot = now / (QrVerifier.ROTATION_SECONDS * 1000L) - 10;
-        String signature = QrVerifier.signature("QR01", "SES01", slot);
+        String signature = QrVerifier.signature("QR01", "SES01", slot, TEST_SECRET);
         QrVerifier.ParsedQr qr = QrVerifier.parse(
                 "UNIVERSE|QR01|SES01|" + slot
                         + "|21.028511|105.804817|50.0|" + signature);
 
-        assertFalse(QrVerifier.hasValidSignature(qr, now));
+        assertFalse(QrVerifier.hasValidSignature(qr, now, TEST_SECRET));
     }
 
     @Test

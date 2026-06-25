@@ -19,7 +19,7 @@ import java.util.UUID;
 final class LecturerService {
 
     private static final Set<String> ATTENDANCE_STATUSES =
-            Set.of("PRESENT", "ABSENT", "LATE");
+            Set.of("PRESENT", "ABSENT", "LATE", "OUT_OF_RANGE");
     private static final DateTimeFormatter DATE_TIME_FORMAT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 

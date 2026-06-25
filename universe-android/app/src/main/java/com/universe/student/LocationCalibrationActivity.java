@@ -25,7 +25,7 @@ public final class LocationCalibrationActivity extends Activity {
 
     private static final int REQUEST_SCAN_QR = 3001;
     private static final int REQUEST_LOCATION_PERMISSION = 3002;
-    private static final float MAX_CALIBRATION_ACCURACY_METERS = 25f;
+    private static final float MAX_CALIBRATION_ACCURACY_METERS = 50f;
     private static final String PAYLOAD_PREFIX = "UNIVERSE_LOCATION|";
 
     private Button scanButton;
@@ -205,7 +205,7 @@ public final class LocationCalibrationActivity extends Activity {
         }
         new AlertDialog.Builder(this)
                 .setTitle("Cần Vị trí chính xác")
-                .setMessage("Đặt tâm geofence yêu cầu GPS sai số tối đa 25 m. "
+                .setMessage("Đặt tâm geofence yêu cầu GPS sai số tối đa 50 m. "
                         + "Hãy mở quyền ứng dụng, chọn Vị trí và bật "
                         + "\"Sử dụng vị trí chính xác\".")
                 .setNegativeButton("Đóng", null)

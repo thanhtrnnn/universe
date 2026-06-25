@@ -148,13 +148,13 @@ final class LocationCalibrationService {
                 || !Double.isFinite(longitude) || longitude < -180 || longitude > 180) {
             throw new ServiceException(400, "Tọa độ GPS không hợp lệ.");
         }
-        if (!Double.isFinite(accuracy) || accuracy < 0) {
+        if (!Double.isFinite(accuracy) || accuracy <= 0) {
             throw new ServiceException(400, "Sai số GPS không hợp lệ.");
         }
         if (accuracy > MAX_ACCURACY_METERS) {
             throw new ServiceException(
                     422,
-                    "GPS phải đạt sai số tối đa 25 m để đặt tâm geofence.");
+                    "GPS phải đạt sai số tối đa " + (int) MAX_ACCURACY_METERS + " m để đặt tâm geofence.");
         }
     }
 

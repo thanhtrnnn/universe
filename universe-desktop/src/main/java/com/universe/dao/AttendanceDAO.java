@@ -17,6 +17,9 @@ import java.util.List;
  */
 public class AttendanceDAO extends DAO {
 
+    private static final java.util.Set<String> VALID_STATUSES =
+            java.util.Set.of("PRESENT", "ABSENT", "LATE", "OUT_OF_RANGE");
+
     /** Danh sách điểm danh theo buổi học (kèm tên SV). */
     public List<Attendance> viewAttendance(String classSessionId) {
         List<Attendance> list = new ArrayList<>();
@@ -59,6 +62,9 @@ public class AttendanceDAO extends DAO {
      * ngược lại chèn mới (Chương 4.3.1.8, test case 5.2.2.8).
      */
     public boolean markManualAttendance(Attendance a) {
+        if (a.getStatus() == null || !VALID_STATUSES.contains(a.getStatus())) {
+            throw new IllegalArgumentException("Trạng thái điểm danh không hợp lệ: " + a.getStatus());
+        }
         String findSql = "SELECT id FROM tblAttendance WHERE tblClassSessionid = ? AND tblStudentid = ?";
         try (Connection con = getConnection();
              PreparedStatement find = con.prepareStatement(findSql)) {
@@ -82,7 +88,7 @@ public class AttendanceDAO extends DAO {
                 String ins = "INSERT INTO tblAttendance (id, attendedAt, method, status, tblClassSessionid, tblStudentid) " +
                              "VALUES (?, ?, 'MANUAL', ?, ?, ?)";
                 try (PreparedStatement ps = con.prepareStatement(ins)) {
-                    ps.setString(1, a.getId() != null ? a.getId() : "ATT-" + System.nanoTime());
+                    ps.setString(1, a.getId() != null ? a.getId() : "ATT" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 17).toUpperCase());
                     ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
                     ps.setString(3, a.getStatus());
                     ps.setString(4, a.getClassSessionId());
@@ -92,6 +98,56 @@ public class AttendanceDAO extends DAO {
             }
         } catch (SQLException e) {
             throw new RuntimeException("Lỗi markManualAttendance: " + e.getMessage(), e);
+        }
+    }
+
+    public boolean markManualAttendanceBatch(java.util.List<Attendance> list) {
+        if (list == null || list.isEmpty()) return true;
+        String findSql = "SELECT id FROM tblAttendance WHERE tblClassSessionid = ? AND tblStudentid = ?";
+        String updSql = "UPDATE tblAttendance SET status = ?, method = 'MANUAL', attendedAt = ? WHERE id = ?";
+        String insSql = "INSERT INTO tblAttendance (id, attendedAt, method, status, tblClassSessionid, tblStudentid) VALUES (?, ?, 'MANUAL', ?, ?, ?)";
+        try (Connection con = getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                java.sql.Timestamp now = java.sql.Timestamp.valueOf(java.time.LocalDateTime.now());
+                for (Attendance a : list) {
+                    if (a.getStatus() == null || !VALID_STATUSES.contains(a.getStatus())) continue;
+                    String existingId = null;
+                    try (PreparedStatement find = con.prepareStatement(findSql)) {
+                        find.setString(1, a.getClassSessionId());
+                        find.setString(2, a.getStudentId());
+                        try (java.sql.ResultSet rs = find.executeQuery()) {
+                            if (rs.next()) existingId = rs.getString("id");
+                        }
+                    }
+                    if (existingId != null) {
+                        try (PreparedStatement ps = con.prepareStatement(updSql)) {
+                            ps.setString(1, a.getStatus());
+                            ps.setTimestamp(2, now);
+                            ps.setString(3, existingId);
+                            ps.executeUpdate();
+                        }
+                    } else {
+                        try (PreparedStatement ps = con.prepareStatement(insSql)) {
+                            ps.setString(1, "ATT" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 17).toUpperCase());
+                            ps.setTimestamp(2, now);
+                            ps.setString(3, a.getStatus());
+                            ps.setString(4, a.getClassSessionId());
+                            ps.setString(5, a.getStudentId());
+                            ps.executeUpdate();
+                        }
+                    }
+                }
+                con.commit();
+                return true;
+            } catch (SQLException e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Lỗi markManualAttendanceBatch: " + e.getMessage(), e);
         }
     }
 
