@@ -9,6 +9,4 @@ CLAUDE.md
 
 universe-desktop/dist
 
-# DB viewer - công cụ dev cục bộ (đường dẫn psql theo từng máy) -> không commit.
-# Giữ README.md để vẫn có hướng dẫn trong repo.
-tools/db-viewer/*
+tools/*

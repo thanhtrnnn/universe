@@ -35,6 +35,19 @@ public final class MobileApiServer {
     }
 
     private void handle(HttpExchange exchange) throws IOException {
+        // CORS: cho phép mọi origin (vd. trang Moodle) gọi API từ trình duyệt.
+        // Dùng token Bearer trong header Authorization (không dùng cookie) nên
+        // Access-Control-Allow-Origin: * là an toàn ở đây.
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        exchange.getResponseHeaders().set(
+                "Access-Control-Allow-Headers", "Authorization, Content-Type");
+        exchange.getResponseHeaders().set("Access-Control-Max-Age", "86400");
+        if ("OPTIONS".equals(exchange.getRequestMethod())) {
+            exchange.sendResponseHeaders(204, -1);
+            exchange.close();
+            return;
+        }
         try {
             route(exchange);
         } catch (ServiceException ex) {
